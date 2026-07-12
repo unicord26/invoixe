@@ -205,3 +205,5 @@ To perform schema modifications:
 1. Make changes to the `schema.prisma` file.
 2. Run `npm run db:push` to apply changes directly to the developer database.
 3. Run `npm run db:generate` to regenerate database type interfaces.
+#   i n v o x i a  
+ 
