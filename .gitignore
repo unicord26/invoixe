@@ -1,0 +1,38 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# build
+dist/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# env
+.env
+.env.*
+!.env.example
+
+# db
+server/db/prisma/*.db
+server/db/prisma/migrations/dev.db*
+
+# native
+client/mobile/.expo/
+client/mobile/android/
+client/mobile/ios/
+
+# os / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# logs
+*.log
+npm-debug.log*
+
+# reference binaries (not part of the codebase)
+*.exe
+*.lnk

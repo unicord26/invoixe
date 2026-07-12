@@ -1,0 +1,506 @@
+// Leafx database schema (Prisma).
+// Phase 0/1 tables: businesses, users, parties, items + supporting masters.
+// Every table carries id (client-gen uuid), timestamps, and soft-delete so the
+// schema is offline-sync ready from day one (sync arrives in a later phase).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // pooler / session mode — used at runtime
+  directUrl = env("DIRECT_URL")   // direct connection — used for migrations / db push
+}
+
+// ------------------------------------------------------------------
+// Accounts & businesses
+// ------------------------------------------------------------------
+
+model User {
+  id          String       @id @default(uuid())
+  username    String?      @unique
+  phone       String?      @unique
+  email       String?      @unique
+  name        String?
+  firstName   String?
+  lastName    String?
+  memberships Membership[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+}
+
+model Business {
+  id           String       @id @default(uuid())
+  name         String
+  orgType      String? // Retailer | Wholesaler | Distributor | Manufacturer | Service | Other
+  gstin        String?
+  pan          String?
+  stateCode    String? // 2-digit GST state code
+  address      String?
+  phone        String?
+  email        String?
+  jurisdiction String?
+  bankName     String?
+  bankAccountNo String?
+  bankIfsc     String?
+  bankBranch   String?
+  // branding & extended profile
+  logoUrl        String?
+  signatureUrl   String?
+  pincode        String?
+  stateName      String?
+  businessCategory String?
+  booksBeginDate DateTime?
+  settings     Json? // normalized preferences blob (see settingsSchema in @leafx/types)
+  memberships  Membership[]
+  parties      Party[]
+  items        Item[]
+  categories   ItemCategory[]
+  transactions Transaction[]
+  numberSeries NumberSeries[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+}
+
+enum Role {
+  owner
+  admin
+  staff
+}
+
+model Membership {
+  id         String   @id @default(uuid())
+  userId     String
+  businessId String
+  role       Role     @default(owner)
+  user       User     @relation(fields: [userId], references: [id])
+  business   Business @relation(fields: [businessId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  @@unique([userId, businessId])
+  @@index([businessId])
+}
+
+// ------------------------------------------------------------------
+// Parties (customers & suppliers)
+// ------------------------------------------------------------------
+
+enum PartyType {
+  customer
+  supplier
+  both
+}
+
+model Party {
+  id               String    @id @default(uuid())
+  businessId       String
+  name             String
+  type             PartyType @default(customer)
+  groupName        String? // simple party group / category label
+  gstin            String?
+  phone            String?
+  email            String?
+  billingAddress   String?
+  shippingAddress  String?
+  stateCode        String?
+  openingBalance   Int       @default(0) // paise; +ve = receivable
+  creditLimit      Int?
+  creditPeriodDays Int?
+  status           String    @default("active") // active | inactive
+  loyaltyPoints    Int       @default(0)
+  business         Business      @relation(fields: [businessId], references: [id])
+  transactions     Transaction[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  @@index([businessId])
+  @@index([businessId, name])
+}
+
+// ------------------------------------------------------------------
+// Items & inventory masters
+// ------------------------------------------------------------------
+
+enum ItemType {
+  product
+  service
+}
+
+model ItemCategory {
+  id         String    @id @default(uuid())
+  businessId String
+  name       String
+  business   Business  @relation(fields: [businessId], references: [id])
+  items      Item[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  @@index([businessId])
+}
+
+model Item {
+  id            String        @id @default(uuid())
+  businessId    String
+  name          String
+  type          ItemType      @default(product)
+  categoryId    String?
+  hsnSac        String?
+  unit          String        @default("PCS")
+  salePrice     Int           @default(0) // paise
+  purchasePrice Int           @default(0) // paise
+  mrp           Int?
+  taxRate       Float         @default(0) // GST percent
+  cessRate      Float         @default(0)
+  taxInclusive  Boolean       @default(false)
+  barcode       String?
+  itemCode      String? // SKU / internal code
+  wholesalePrice Int          @default(0) // paise
+  imageUrl      String?
+  trackBatch    Boolean       @default(false)
+  trackSerial   Boolean       @default(false)
+  batches       ItemBatch[]
+  serials       SerialNumber[]
+  openingStock  Float         @default(0)
+  minStock      Float         @default(0)
+  category      ItemCategory? @relation(fields: [categoryId], references: [id])
+  business      Business      @relation(fields: [businessId], references: [id])
+  movements     StockMovement[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+
+  @@index([businessId])
+  @@index([businessId, name])
+  @@index([barcode])
+}
+
+// Signed stock movements. Current stock = item.openingStock + sum(qty).
+model StockMovement {
+  id               String   @id @default(uuid())
+  businessId       String
+  itemId           String
+  qty              Float // + in (purchase/adjust-up), - out (sale/adjust-down)
+  reason           String // sale | purchase | adjustment | transfer
+  godownId         String? // which godown this movement affected
+  refTransactionId String?
+  note             String?
+  createdAt        DateTime @default(now())
+  item             Item     @relation(fields: [itemId], references: [id])
+
+  @@index([businessId])
+  @@index([itemId])
+  @@index([godownId])
+}
+
+// Batch/lot tracking for an item (batch no + expiry/mfg + on-hand qty).
+model ItemBatch {
+  id         String    @id @default(uuid())
+  businessId String
+  itemId     String
+  batchNo    String
+  expiryDate DateTime?
+  mfgDate    DateTime?
+  qty        Float     @default(0)
+  item       Item      @relation(fields: [itemId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([itemId])
+}
+
+// Serial-number tracking. status: in (in stock) | out (sold).
+model SerialNumber {
+  id               String   @id @default(uuid())
+  businessId       String
+  itemId           String
+  serial           String
+  status           String   @default("in")
+  refTransactionId String?
+  item             Item     @relation(fields: [itemId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([itemId, serial])
+  @@index([itemId])
+}
+
+// A stock transfer between two godowns → writes a paired (−/+) StockMovement set.
+model StockTransfer {
+  id           String   @id @default(uuid())
+  businessId   String
+  itemId       String
+  fromGodownId String
+  toGodownId   String
+  qty          Float
+  note         String?
+  date         DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@index([businessId])
+  @@index([itemId])
+}
+
+// ------------------------------------------------------------------
+// Transactions (Phase 2: sale invoice — schema covers all doc types)
+// ------------------------------------------------------------------
+
+enum TransactionType {
+  sale
+  purchase
+  payment_in
+  payment_out
+  expense
+  other_income
+  estimate
+  proforma
+  sale_order
+  purchase_order
+  delivery_challan
+  credit_note
+  debit_note
+}
+
+enum TransactionStatus {
+  draft
+  final
+  cancelled
+}
+
+model Transaction {
+  id             String            @id @default(uuid())
+  businessId     String
+  type           TransactionType   @default(sale)
+  status         TransactionStatus @default(final)
+  number         String // full invoice number, e.g. "INV-1"
+  series         String            @default("INV")
+  seq            Int // numeric sequence within series
+  partyId        String?
+  partyName      String? // snapshot at time of billing
+  partyGstin     String?
+  placeOfSupply  String? // 2-digit state code
+  interState     Boolean           @default(false)
+  paymentMode    String? // cash | cheque | upi | bank_transfer | card (for payments)
+  referenceNo    String? // cheque/UTR/reference for payments; supplier bill no for purchases
+  category       String? // expense/income category
+  convertedToId  String? // set on a source doc (estimate/order) once converted to an invoice
+  date           DateTime          @default(now())
+  dueDate        DateTime?
+  notes          String?
+  // money — all integer paise
+  subTotal       Int               @default(0)
+  totalDiscount  Int               @default(0)
+  cgst           Int               @default(0)
+  sgst           Int               @default(0)
+  igst           Int               @default(0)
+  cess           Int               @default(0)
+  totalTax       Int               @default(0)
+  // invoice-level adjustments (Phase F transaction extras)
+  discountFlat   Int               @default(0)
+  additionalCharges Json? // [{ label, amount(paise) }]
+  tcsRate        Float             @default(0)
+  tcsAmount      Int               @default(0)
+  tdsRate        Float             @default(0)
+  tdsAmount      Int               @default(0)
+  reverseCharge  Boolean           @default(false)
+  // transport / e-way + terms
+  ewayBillNo         String?
+  transporterName    String?
+  vehicleNo          String?
+  transportDistanceKm Int?
+  termsConditions    String?
+  roundOff       Int               @default(0)
+  grandTotal     Int               @default(0)
+  lines          TransactionLine[]
+  business       Business          @relation(fields: [businessId], references: [id])
+  party          Party?            @relation(fields: [partyId], references: [id])
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  deletedAt      DateTime?
+
+  @@unique([businessId, series, seq])
+  @@index([businessId, type])
+  @@index([partyId])
+}
+
+model TransactionLine {
+  id              String      @id @default(uuid())
+  transactionId   String
+  lineNo          Int
+  itemId          String?
+  description     String
+  hsnSac          String?
+  qty             Float       @default(1)
+  unit            String      @default("PCS")
+  rate            Int         @default(0) // paise
+  discountPercent Float       @default(0)
+  taxRate         Float       @default(0)
+  cessRate        Float       @default(0)
+  taxInclusive    Boolean     @default(false)
+  // computed snapshot — all integer paise
+  taxable         Int         @default(0)
+  cgst            Int         @default(0)
+  sgst            Int         @default(0)
+  igst            Int         @default(0)
+  cess            Int         @default(0)
+  lineTotal       Int         @default(0)
+  transaction     Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId])
+}
+
+// ------------------------------------------------------------------
+// Cash & bank (Phase 7)
+// ------------------------------------------------------------------
+
+model BankAccount {
+  id             String      @id @default(uuid())
+  businessId     String
+  name           String
+  type           String      @default("bank") // bank | cash | upi
+  accountNo      String?
+  ifsc           String?
+  openingBalance Int         @default(0) // paise
+  entries        BankEntry[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  deletedAt      DateTime?
+
+  @@index([businessId])
+}
+
+// Cheques received from / issued to parties, tracked through their lifecycle.
+model Cheque {
+  id            String    @id @default(uuid())
+  businessId    String
+  partyId       String?
+  bankAccountId String?
+  chequeNo      String
+  amount        Int // paise
+  direction     String // received | issued
+  status        String    @default("open") // open | deposited | cleared | bounced
+  date          DateTime  @default(now())
+  dueDate       DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  @@index([businessId])
+  @@index([businessId, status])
+}
+
+// Loan accounts + their entries (disbursement / EMI / charges).
+model LoanAccount {
+  id           String      @id @default(uuid())
+  businessId   String
+  lender       String
+  principal    Int // paise
+  balance      Int // paise, current outstanding
+  interestRate Float?
+  startDate    DateTime    @default(now())
+  notes        String?
+  entries      LoanEntry[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+
+  @@index([businessId])
+}
+
+model LoanEntry {
+  id        String      @id @default(uuid())
+  loanId    String
+  amount    Int // paise
+  kind      String // disbursement | emi | charge
+  date      DateTime    @default(now())
+  note      String?
+  loan      LoanAccount @relation(fields: [loanId], references: [id])
+  createdAt DateTime    @default(now())
+
+  @@index([loanId])
+}
+
+model BankEntry {
+  id         String      @id @default(uuid())
+  businessId String
+  accountId  String
+  amount     Int // signed paise: + in, - out
+  kind       String // deposit | withdraw | transfer_in | transfer_out
+  note       String?
+  date       DateTime    @default(now())
+  account    BankAccount @relation(fields: [accountId], references: [id])
+  createdAt  DateTime    @default(now())
+
+  @@index([accountId])
+  @@index([businessId])
+}
+
+// ------------------------------------------------------------------
+// Manufacturing & godowns (Phase 11)
+// ------------------------------------------------------------------
+
+model Bom {
+  id         String    @id @default(uuid())
+  businessId String
+  itemId     String // finished good
+  lines      BomLine[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([businessId, itemId])
+}
+
+model BomLine {
+  id        String @id @default(uuid())
+  bomId     String
+  rawItemId String
+  qty       Float
+  bom       Bom    @relation(fields: [bomId], references: [id], onDelete: Cascade)
+
+  @@index([bomId])
+}
+
+model Godown {
+  id         String    @id @default(uuid())
+  businessId String
+  name       String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  @@index([businessId])
+}
+
+// One-time codes for phone/email verification during sign-up.
+model OtpCode {
+  id         String    @id @default(uuid())
+  channel    String // phone | email
+  value      String // the phone number or email being verified
+  code       String // 6-digit code
+  expiresAt  DateTime
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([channel, value])
+}
+
+// Gap-free sequential numbering per business + series.
+model NumberSeries {
+  id         String   @id @default(uuid())
+  businessId String
+  key        String // e.g. "sale"
+  prefix     String   @default("INV")
+  next       Int      @default(1)
+  business   Business @relation(fields: [businessId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([businessId, key])
+}

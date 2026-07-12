@@ -1,0 +1,12 @@
+{
+  "extends": "@leafx/config/tsconfig.base",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"],
+    "noEmit": false
+  },
+  "include": ["src/**/*.ts"]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@leafx/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    "./tailwind": "./tailwind-preset.js",
+    "./tsconfig.base": "./tsconfig.base.json"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}
