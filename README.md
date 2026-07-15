@@ -199,10 +199,31 @@ npm run db:generate
 ```
 
 ### 3. Launch Development Workspaces
-Start Next.js frontend (port `3000`) and NestJS API backend (port `5000`) simultaneously:
+Start the Next.js frontend (port `3000`) and NestJS API (port `5000`) together:
 ```bash
 npm run dev
 ```
+
+Stale dev servers are cleared off both ports first, then the API reports what it
+can actually reach before anything claims to be ready:
+
+```text
+[api  ]   Invoixe API
+[api  ]   ✓ env       H:UniCordProductInvoixe.env
+[api  ]   ✓ database  Supabase Postgres — healthy (312ms)
+[api  ]   ✓ auth      Supabase Auth — reachable (94ms)
+[api  ]   ✓ cors      http://localhost:3000
+[api  ]   ✓ api       http://localhost:5000
+[api  ]   ✓ ready
+[web  ]  ✓ Ready in 1.8s
+[ready] ✓ Invoixe is ready in 5.6s
+[ready]     web  http://localhost:3000
+[ready]     api  http://localhost:5000 · database healthy (312ms)
+```
+
+A failed check prints `✗` with the reason and the summary says so rather than
+"ready" — if the database is unreachable you learn it here, not from a blank
+screen later. Set `API_VERBOSE=true` for Nest's full per-route logs.
 
 Visit **[http://localhost:3000](http://localhost:3000)** in your browser, enter username `admin` and password `admin123` to log in, and begin managing your business!
 

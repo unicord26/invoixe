@@ -22,10 +22,9 @@ function findEnvFile(): string | undefined {
   }
 }
 
-const envPath = findEnvFile();
-if (envPath) {
-  config({ path: envPath });
-} else {
-  // Not fatal: hosted deployments usually inject real env vars instead.
-  console.warn("⚠ No .env file found; relying on the ambient environment.");
+/** Absolute path of the .env that was loaded, or null when running on ambient env vars. */
+export const loadedEnvPath: string | null = findEnvFile() ?? null;
+
+if (loadedEnvPath) {
+  config({ path: loadedEnvPath });
 }
