@@ -7,10 +7,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Search, Camera, Settings, X, Percent, IndianRupee } from "lucide-react";
+import { Search, Settings, X } from "lucide-react";
 import { GST_RATES, type Item } from "@invoixe/types";
 import { api } from "../../../lib/api";
-import { PageHeader } from "../../../components/page-header";
+
 import { MoneyInput } from "../../../components/money-input";
 import { ImageUpload } from "../../../components/image-upload";
 import { Button } from "@/components/ui/button";

@@ -30,8 +30,11 @@ jobs:
         run: npx tsc --noEmit
         working-directory: server/api
 
-      - name: Test (core tax engine)
-        run: npm test --workspace @invoixe/core
+      - name: Lint (web)
+        run: npm run lint --workspace @invoixe/web
+
+      - name: Test (all workspaces)
+        run: npm test
 
       # Typechecking alone never caught that the API's dist was unrunnable:
       # tsc emitted extensionless imports Node's ESM loader rejects. Build and

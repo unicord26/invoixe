@@ -289,8 +289,10 @@ export default function InvoiceView({ params }: { params: Promise<{ id: string }
               <td style={{ width: "42%", verticalAlign: "bottom" }}>
                 <div className="r b" style={{ color: "#15803d" }}>for {inv.business.name}</div>
                 {show.signature && inv.business.signatureUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <div style={{ textAlign: "right", marginTop: 4 }}>
+                    {/* Plain <img>: this page is print/PDF output, where next/image's
+                        lazy-loading and srcset add nothing and can break rendering. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={inv.business.signatureUrl} alt="" style={{ height: 44, objectFit: "contain", display: "inline-block" }} />
                   </div>
                 ) : (

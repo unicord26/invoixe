@@ -2,48 +2,30 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+
 import { Plus, MoreHorizontal, Trash2, SlidersHorizontal, Package } from "lucide-react";
 import { toast } from "sonner";
 import { formatINR } from "@invoixe/core";
-import { GST_RATES, type Item } from "@invoixe/types";
+import { type Item } from "@invoixe/types";
 import Link from "next/link";
 import { api } from "../../lib/api";
 import { PageHeader } from "../../components/page-header";
 import { DataTable, type Column } from "../../components/data-table";
-import { MoneyInput } from "../../components/money-input";
-import { ImageUpload } from "../../components/image-upload";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitle
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,50 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const UNITS = ["PCS", "KG", "GM", "LTR", "ML", "BOX", "MTR", "DOZ", "PKT"];
 type ItemWithStock = Item & { currentStock: number };
-
-const businessId = () =>
-  (typeof window !== "undefined" && localStorage.getItem("leafx.businessId")) || "shared";
-
-const formSchema = z.object({
-  name: z.string().trim().min(1, "Name is required"),
-  type: z.enum(["product", "service"]),
-  hsnSac: z.string(),
-  unit: z.string(),
-  itemCode: z.string(),
-  taxRate: z.number(),
-  taxInclusive: z.boolean(),
-  salePrice: z.number().int().nonnegative().nullable(),
-  wholesalePrice: z.number().int().nonnegative().nullable(),
-  purchasePrice: z.number().int().nonnegative().nullable(),
-  imageUrl: z.string().nullable(),
-  openingStock: z.number().nullable(),
-  minStock: z.number().nullable(),
-  trackBatch: z.boolean(),
-  trackSerial: z.boolean(),
-});
-type FormValues = z.infer<typeof formSchema>;
-
-const DEFAULTS: FormValues = {
-  name: "",
-  type: "product",
-  hsnSac: "",
-  unit: "PCS",
-  itemCode: "",
-  taxRate: 18,
-  taxInclusive: false,
-  salePrice: null,
-  wholesalePrice: null,
-  purchasePrice: null,
-  imageUrl: null,
-  openingStock: null,
-  minStock: null,
-  trackBatch: false,
-  trackSerial: false,
-};
-
-
 
 // Controlled so it can live OUTSIDE the DropdownMenu — a Dialog nested inside
 // DropdownMenuContent unmounts the moment the menu closes.

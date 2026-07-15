@@ -7,7 +7,6 @@ import {
   Users,
   Package,
   Wallet,
-  AlertTriangle,
   CheckCircle2,
   TrendingUp,
   TrendingDown,
@@ -21,7 +20,7 @@ import {
   Zap,
   Info,
   ExternalLink,
-  type LucideIcon,
+  type LucideIcon
 } from "lucide-react";
 import { formatINR } from "@invoixe/core";
 import { api } from "../lib/api";

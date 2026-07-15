@@ -6,7 +6,7 @@ import { FlatCompat } from "@eslint/eslintrc";
 
 const compat = new FlatCompat({ baseDirectory: dirname(fileURLToPath(import.meta.url)) });
 
-export default [
+const config = [
   {
     // components/ui is vendored shadcn/ui — regenerated, not hand-maintained.
     ignores: [".next/**", "node_modules/**", "next-env.d.ts", "components/ui/**"],
@@ -18,3 +18,5 @@ export default [
     rules: { "@typescript-eslint/no-require-imports": "off" },
   },
 ];
+
+export default config;

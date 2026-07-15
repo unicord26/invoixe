@@ -381,7 +381,7 @@ function PartyDialog({ party, open, onOpenChange, trigger }: PartyDialogProps) {
 
   const submitForm = (v: FormValues, andNew: boolean) => {
     mutation.mutate(v, {
-      onSuccess: (p) => {
+      onSuccess: () => {
         if (andNew && !isEdit) {
           form.reset(DEFAULTS);
           setShowShipping(false);

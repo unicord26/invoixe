@@ -3,19 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatINR, rupeesToPaise, paiseToRupees } from "@invoixe/core";
+import { formatINR, rupeesToPaise } from "@invoixe/core";
 import { api } from "../../lib/api";
 import {
   Landmark,
   Wallet,
   Zap,
-  ArrowRight,
   Search,
-  Plus,
-  Minus,
-  ArrowLeftRight,
   Info,
-  Calendar,
   Layers,
   Sparkles,
   RefreshCw,
