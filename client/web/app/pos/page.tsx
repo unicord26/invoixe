@@ -19,7 +19,12 @@ export default function PosPage() {
   const [q, setQ] = useState("");
 
   const list = (items ?? []).filter((i) => i.name.toLowerCase().includes(q.toLowerCase()));
-  const cartItems = Object.entries(cart).map(([id, qty]) => ({ item: items?.find((i) => i.id === id)!, qty })).filter((c) => c.item);
+  // flatMap narrows the item to a real Item; the previous `!` + filter did the
+  // same at runtime but lied to the type system on the way through.
+  const cartItems = Object.entries(cart).flatMap(([id, qty]) => {
+    const item = items?.find((i) => i.id === id);
+    return item ? [{ item, qty }] : [];
+  });
 
   const total = useMemo(() => {
     const lines = cartItems.map((c) => ({ qty: c.qty, rate: c.item.salePrice, taxRate: c.item.taxRate }));

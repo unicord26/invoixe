@@ -20,7 +20,8 @@ import {
   ShoppingCart,
   Zap,
   Info,
-  ExternalLink
+  ExternalLink,
+  type LucideIcon,
 } from "lucide-react";
 import { formatINR } from "@invoixe/core";
 import { api } from "../lib/api";
@@ -100,7 +101,7 @@ function KPICard({
 }: {
   label: string;
   value: string;
-  icon: any;
+  icon: LucideIcon;
   trend?: { text: string; up: boolean };
   colorClass: string;
   loading: boolean;

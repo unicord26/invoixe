@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import React, { useEffect, useMemo, useState } from "react";
 
 type CardState = {
@@ -149,7 +150,7 @@ const CreditCardForm = ({
           <div id="highlight" className={highlightClass} />
 
           {/* FRONT */}
-          <section className="card__front" style={{ ["--ring1" as any]: ring1, ["--ring2" as any]: ring2 }}>
+          <section className="card__front" style={{ "--ring1": ring1, "--ring2": ring2 } as CSSProperties}>
             <div className="card__header">
               <div>CreditCard</div>
               <svg xmlns="http://www.w3.org/2000/svg" height="40" width="60" viewBox="-96 -98.908 832 593.448">
@@ -195,7 +196,7 @@ const CreditCardForm = ({
           </section>
 
           {/* BACK */}
-          <section className="card__back" style={{ ["--ring1" as any]: ring1, ["--ring2" as any]: ring2 }}>
+          <section className="card__back" style={{ "--ring1": ring1, "--ring2": ring2 } as CSSProperties}>
             <div className="card__hide_line" />
             <div className="card_cvv">
               <span>CVV</span>

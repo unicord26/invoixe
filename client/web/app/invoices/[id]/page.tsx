@@ -269,10 +269,10 @@ export default function InvoiceView({ params }: { params: Promise<{ id: string }
           <tbody>
             <tr>
               <td style={{ width: "58%" }}>
-                {inv.business.pan && <div className="b" style={{ fontSize: 11 }}>Company's PAN: {inv.business.pan}</div>}
+                {inv.business.pan && <div className="b" style={{ fontSize: 11 }}>Company&apos;s PAN: {inv.business.pan}</div>}
                 {(inv.business.bankName || inv.business.bankAccountNo) && (
                   <div style={{ marginTop: 6 }}>
-                    <div className="mut">Company's Bank Details</div>
+                    <div className="mut">Company&apos;s Bank Details</div>
                     {inv.business.bankName && <div style={{ fontSize: 11 }}>Bank: <span className="b">{inv.business.bankName}</span></div>}
                     {inv.business.bankAccountNo && <div style={{ fontSize: 11 }}>A/c No.: {inv.business.bankAccountNo}</div>}
                     {inv.business.bankIfsc && <div style={{ fontSize: 11 }}>IFSC: {inv.business.bankIfsc}</div>}

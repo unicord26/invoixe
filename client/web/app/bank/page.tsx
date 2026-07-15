@@ -175,7 +175,7 @@ export default function BankPage() {
       setUpiId("");
       toast.success("Bank account created successfully!");
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to create account.");
     },
   });
@@ -196,7 +196,7 @@ export default function BankPage() {
       setCardDialogOpen(false);
       toast.success("Card saved successfully!");
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to save card.");
     },
   });
@@ -207,7 +207,7 @@ export default function BankPage() {
       qc.invalidateQueries({ queryKey: ["cards"] });
       toast.success("Card removed.");
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to remove card.");
     },
   });
@@ -227,7 +227,7 @@ export default function BankPage() {
           : "Withdrawal registered successfully!"
       );
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Transaction failed.");
     },
   });
@@ -244,7 +244,7 @@ export default function BankPage() {
       setXfer({ toId: "", amount: "", note: "" });
       toast.success("Funds transferred successfully!");
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Transfer failed.");
     },
   });
