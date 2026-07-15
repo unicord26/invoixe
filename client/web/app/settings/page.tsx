@@ -387,7 +387,7 @@ export default function SettingsPage() {
   const { data: business } = useQuery({ queryKey: ["business"], queryFn: () => api.get<Business>("/api/business/current") });
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-6 py-10">
       <PageHeader title="Settings" description="Firm profile, preferences, and document numbering." backHref="/" backLabel="Dashboard" />
 
       {business && (

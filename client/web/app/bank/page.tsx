@@ -324,7 +324,7 @@ export default function BankPage() {
     "w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 dark:border-zinc-800 dark:bg-zinc-950";
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+    <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Back button and Page Title */}
       <div className="flex flex-col gap-4 border-b border-gray-100 pb-6 md:flex-row md:items-center justify-between dark:border-zinc-800">
         <div>

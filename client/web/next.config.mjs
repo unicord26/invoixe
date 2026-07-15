@@ -18,6 +18,7 @@ config({ path: resolve(repoRoot, ".env") });
 const nextConfig = {
   // Compile the raw-TS workspace packages we import.
   transpilePackages: ["@invoixe/core", "@invoixe/types"],
+  devIndicators: false,
 };
 
 export default nextConfig;

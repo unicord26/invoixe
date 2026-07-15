@@ -299,7 +299,7 @@ export default function ItemsPage() {
   ];
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-6 py-10">
       <PageHeader
         title="Items"
         description={`${items?.length ?? 0} products & services`}

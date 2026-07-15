@@ -55,7 +55,7 @@ export default function Home() {
   const modules = flattenLeaves().filter((m) => m.href !== "/");
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+    <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* 1. Header / Welcome Area */}
       <div className="flex flex-col justify-between gap-4 border-b border-gray-100 pb-6 md:flex-row md:items-center dark:border-zinc-800">
         <div>

@@ -1336,7 +1336,7 @@ export default function PartiesPage() {
   ];
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-6 py-10">
       <PageHeader
         title="Parties"
         description={`${parties?.length ?? 0} customers & suppliers`}

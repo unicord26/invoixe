@@ -158,7 +158,7 @@ export default function NewInvoicePage() {
     lines.some((l) => Number(l.qty) > 0 && l.rateRupees !== "" && l.description.trim()) && !save.isPending;
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-6 py-10">
       <PageHeader title="New Sale Invoice" backHref="/invoices" backLabel="Invoices" />
 
       {/* Party */}

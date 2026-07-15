@@ -151,7 +151,7 @@ export default function LoansPage() {
   });
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-6 py-10">
       <PageHeader title="Loan Accounts" description={`${loans?.length ?? 0} loans`} backHref="/bank" backLabel="Cash & Bank">
         <AddLoanDialog />
       </PageHeader>

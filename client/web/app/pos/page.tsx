@@ -42,7 +42,7 @@ export default function PosPage() {
   });
 
   return (
-    <main className="mx-auto grid max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[1fr_360px]">
+    <main className="mx-auto grid max-w-[1600px] gap-6 px-6 py-8 lg:grid-cols-[1fr_360px]">
       {/* items */}
       <div>
         <header className="mb-4 flex items-center justify-between">

@@ -27,7 +27,7 @@ export default function ReportsPage() {
   const { data: stock } = useQuery({ queryKey: ["r-stock"], queryFn: () => api.get<Stock>("/api/reports/stock") });
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-6 py-10">
       <header className="mb-8"><Link href="/" className="text-sm text-green-700 hover:underline">← Invoixe</Link>
         <h1 className="text-2xl font-extrabold text-gray-900">Reports</h1></header>
 

@@ -136,7 +136,7 @@ export default function NewItemPage() {
 
   return (
     <Form {...form}>
-      <main className="mx-auto max-w-5xl px-6 py-6">
+      <main className="mx-auto max-w-[1600px] px-6 py-6">
         
         {/* Custom Header Row mimicking the screenshot */}
         <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-6">

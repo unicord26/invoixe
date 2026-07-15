@@ -136,7 +136,7 @@ export default function GodownsPage() {
   }, [stock]);
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-6 py-10">
       <PageHeader title="Godowns" description={`${godowns?.length ?? 0} warehouses`} backHref="/" backLabel="Dashboard">
         <AddGodownDialog />
       </PageHeader>

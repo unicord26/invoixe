@@ -20,7 +20,7 @@ export default function InvoicesPage() {
   });
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-6 py-10">
       <header className="mb-8 flex items-end justify-between">
         <div>
           <Link href="/" className="text-sm text-green-700 hover:underline">← Invoixe</Link>

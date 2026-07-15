@@ -37,7 +37,7 @@ export default function BackupPage() {
   };
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-6 py-10">
       <header className="mb-8"><Link href="/" className="text-sm text-green-700 hover:underline">← Invoixe</Link>
         <h1 className="text-2xl font-extrabold text-gray-900">Backup &amp; Import</h1></header>
 
