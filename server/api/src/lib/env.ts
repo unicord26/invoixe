@@ -1,8 +1,31 @@
 // Loads the repo-root .env before anything touches process.env (Prisma, Supabase).
 import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
+import { existsSync } from "node:fs";
+import { dirname, resolve, parse } from "node:path";
 
-const here = dirname(fileURLToPath(import.meta.url));
-// server/api/src/lib -> repo root is four levels up
-config({ path: resolve(here, "../../../../.env") });
+/**
+ * Walk up from this file until a .env turns up.
+ *
+ * Don't count directory levels here: this module runs from src/lib/ under the
+ * dev runner but from dist/ once bundled, so a fixed "../../../.." would point
+ * somewhere different in production and silently load no .env at all.
+ */
+function findEnvFile(): string | undefined {
+  let dir = dirname(fileURLToPath(import.meta.url));
+  const { root } = parse(dir);
+  while (true) {
+    const candidate = resolve(dir, ".env");
+    if (existsSync(candidate)) return candidate;
+    if (dir === root) return undefined;
+    dir = dirname(dir);
+  }
+}
+
+const envPath = findEnvFile();
+if (envPath) {
+  config({ path: envPath });
+} else {
+  // Not fatal: hosted deployments usually inject real env vars instead.
+  console.warn("⚠ No .env file found; relying on the ambient environment.");
+}

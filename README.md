@@ -49,6 +49,7 @@ folder name maps to the package name you see in imports — `shared/core` is
 │       └── public/          #   Static assets served at the site root
 ├── server/
 │   ├── api/                 # @invoixe/api  — NestJS REST API
+│   │   ├── build.mjs        #   Production bundle (esbuild + SWC); see the file header for why
 │   │   └── src/
 │   │       ├── <resource>/  #   One module per resource (controller + service)
 │   │       ├── common/      #   Prisma module, Supabase auth guard, Zod validation pipe
@@ -216,7 +217,8 @@ All of these run from the repo root.
 | `npm run dev` | Web + API | Starts both dev servers; frees ports `3000`/`5000` first |
 | `npm run dev:client` | `@invoixe/web` | Next.js dev server on port `3000` |
 | `npm run dev:server` | `@invoixe/api` | NestJS dev server on port `5000` |
-| `npm run build` | All workspaces | Production build, in dependency order |
+| `npm run build` | All workspaces | Production build (API bundle, then Next) |
+| `npm start --workspace @invoixe/api` | `@invoixe/api` | Runs the built API from `dist/main.js` |
 | `npm run typecheck` | All workspaces | Type-checks every workspace |
 | `npm test` | `@invoixe/core` | Vitest suite for the GST tax engine |
 | `npm run db:generate` | `server/prisma` | Regenerates the Prisma client — run after schema edits |

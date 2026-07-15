@@ -32,3 +32,31 @@ jobs:
 
       - name: Test (core tax engine)
         run: npm test --workspace @invoixe/core
+
+      # Typechecking alone never caught that the API's dist was unrunnable:
+      # tsc emitted extensionless imports Node's ESM loader rejects. Build and
+      # boot the real bundle so a broken deploy artifact fails here instead.
+      - name: Build (api)
+        run: npm run build --workspace @invoixe/api
+
+      - name: Smoke-test the API bundle
+        # No DB/Supabase credentials in CI, so assert on boot rather than on a
+        # 200 from /api/health: a DI or module-resolution regression throws
+        # before the port is ever bound. The dummy values below only need to be
+        # well-formed — supabase-js throws at import if its URL is undefined,
+        # and neither client connects eagerly.
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db
+          DIRECT_URL: postgresql://user:pass@localhost:5432/db
+          SUPABASE_URL: http://localhost:54321
+          SUPABASE_ANON_KEY: dummy-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: dummy-service-key
+        run: |
+          node dist/main.js > boot.log 2>&1 &
+          for i in $(seq 1 20); do
+            grep -q "listening on" boot.log && break
+            sleep 1
+          done
+          cat boot.log
+          grep -q "listening on" boot.log
+        working-directory: server/api

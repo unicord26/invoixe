@@ -3,10 +3,10 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "outDir": "dist",
     "rootDir": "src",
     "types": ["node"],
-    "noEmit": false,
+    // tsc only type-checks here; build.mjs (esbuild + SWC) emits dist/.
+    "noEmit": true,
     // NestJS DI resolves constructor params from design:paramtypes metadata,
     // which only the decorator transforms below emit.
     "experimentalDecorators": true,
