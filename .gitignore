@@ -28,6 +28,8 @@ client/mobile/ios/
 Thumbs.db
 .vscode/
 .idea/
+# local Claude Code config (may contain machine-specific paths / secrets)
+.claude/
 
 # logs
 *.log
