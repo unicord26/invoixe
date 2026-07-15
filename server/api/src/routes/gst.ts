@@ -1,8 +1,66 @@
 import { Router } from "express";
 import { prisma } from "@leafx/db";
+import { gstinSchema, stateNameFromGstin } from "@leafx/types";
 import { getUserBusinessId } from "../lib/business";
 
 export const gstRouter = Router();
+
+// GET /api/gst/lookup/:gstin — resolve registered-taxpayer details from the GST
+// network so the party form can auto-fill name, type, state and address.
+//
+// Provider is configurable via env; the default request/response shape follows
+// Appyflow's verifyGST API (https://appyflow.in/gst-api). Set GST_API_KEY (and
+// optionally GST_API_URL) to enable. Without a key the endpoint reports
+// "gst_lookup_unconfigured" and the client falls back to offline state fill.
+gstRouter.get("/lookup/:gstin", async (req, res) => {
+  const gstin = String(req.params.gstin ?? "").toUpperCase().trim();
+  if (!gstinSchema.safeParse(gstin).success) {
+    return res.status(400).json({ error: "invalid_gstin" });
+  }
+
+  const key = process.env.GST_API_KEY;
+  const baseUrl = process.env.GST_API_URL ?? "https://appyflow.in/api/verifyGST";
+  if (!key) return res.status(503).json({ error: "gst_lookup_unconfigured" });
+
+  try {
+    const url = `${baseUrl}?gstNo=${encodeURIComponent(gstin)}&key_secret=${encodeURIComponent(key)}`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(12_000) });
+    const data: any = await r.json().catch(() => ({}));
+
+    // Appyflow signals failure with { error: true, message } even on HTTP 200.
+    if (!r.ok || data?.error) {
+      return res
+        .status(502)
+        .json({ error: "gst_lookup_failed", message: data?.message ?? `HTTP ${r.status}` });
+    }
+
+    const t = data?.taxpayerInfo;
+    if (!t) return res.status(404).json({ error: "gstin_not_found" });
+
+    const addr = t?.pradr?.addr ?? {};
+    const address = [addr.bno, addr.bnm, addr.flno, addr.st, addr.loc, addr.city, addr.dst, addr.pncd]
+      .map((s: unknown) => (typeof s === "string" ? s.trim() : ""))
+      .filter(Boolean)
+      .join(", ");
+
+    res.json({
+      gstin: t.gstin ?? gstin,
+      legalName: t.lgnm ?? "",
+      tradeName: t.tradeNam ?? null,
+      status: t.sts ?? null,
+      taxpayerType: t.dty ?? null,
+      constitution: t.ctb ?? null,
+      stateCode: gstin.slice(0, 2),
+      state: (typeof addr.stcd === "string" && addr.stcd.trim()) || stateNameFromGstin(gstin),
+      address: address || null,
+      pincode: (typeof addr.pncd === "string" && addr.pncd.trim()) || null,
+    });
+  } catch (e) {
+    res
+      .status(502)
+      .json({ error: "gst_lookup_failed", message: e instanceof Error ? e.message : "unknown" });
+  }
+});
 
 // paise -> rupees number (GST portal expects rupees with 2 decimals)
 const rs = (p: number) => Math.round(p) / 100;

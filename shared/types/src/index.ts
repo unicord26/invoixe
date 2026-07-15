@@ -98,6 +98,77 @@ export type PartyStatus = z.infer<typeof partyStatusSchema>;
 export const createPartySchema = partySchema.omit({ id: true });
 export type CreateParty = z.infer<typeof createPartySchema>;
 
+/**
+ * GST state codes (first two digits of a GSTIN) → state name.
+ * Names match the INDIAN_STATES list used in the party/business forms so the
+ * derived value binds directly to a <Select>. Used to auto-fill state from a
+ * GSTIN without any network call.
+ */
+export const GST_STATE_CODES: Record<string, string> = {
+  "01": "Jammu and Kashmir",
+  "02": "Himachal Pradesh",
+  "03": "Punjab",
+  "04": "Chandigarh",
+  "05": "Uttarakhand",
+  "06": "Haryana",
+  "07": "Delhi",
+  "08": "Rajasthan",
+  "09": "Uttar Pradesh",
+  "10": "Bihar",
+  "11": "Sikkim",
+  "12": "Arunachal Pradesh",
+  "13": "Nagaland",
+  "14": "Manipur",
+  "15": "Mizoram",
+  "16": "Tripura",
+  "17": "Meghalaya",
+  "18": "Assam",
+  "19": "West Bengal",
+  "20": "Jharkhand",
+  "21": "Odisha",
+  "22": "Chhattisgarh",
+  "23": "Madhya Pradesh",
+  "24": "Gujarat",
+  "25": "Dadra and Nagar Haveli and Daman and Diu",
+  "26": "Dadra and Nagar Haveli and Daman and Diu",
+  "27": "Maharashtra",
+  "28": "Andhra Pradesh",
+  "29": "Karnataka",
+  "30": "Goa",
+  "31": "Lakshadweep",
+  "32": "Kerala",
+  "33": "Tamil Nadu",
+  "34": "Puducherry",
+  "35": "Andaman and Nicobar Islands",
+  "36": "Telangana",
+  "37": "Andhra Pradesh",
+  "38": "Ladakh",
+};
+
+/** Resolve a state name from a GSTIN's leading state code. */
+export const stateNameFromGstin = (gstin: string): string | null =>
+  GST_STATE_CODES[gstin.slice(0, 2)] ?? null;
+
+/**
+ * Registered-taxpayer details resolved from a GSTIN via the GST network.
+ * Normalized shape returned by GET /api/gst/lookup/:gstin.
+ */
+export const gstinDetailsSchema = z.object({
+  gstin: z.string(),
+  legalName: z.string(),
+  tradeName: z.string().nullable(),
+  status: z.string().nullable(),
+  /** Taxpayer type, e.g. "Regular" or "Composition". */
+  taxpayerType: z.string().nullable(),
+  /** Constitution of business, e.g. "Private Limited Company". */
+  constitution: z.string().nullable(),
+  stateCode: z.string().nullable(),
+  state: z.string().nullable(),
+  address: z.string().nullable(),
+  pincode: z.string().nullable(),
+});
+export type GstinDetails = z.infer<typeof gstinDetailsSchema>;
+
 /* ---------------- Item ---------------- */
 
 export const itemSchema = z.object({

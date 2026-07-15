@@ -1,16 +1,16 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, MoreHorizontal, Phone, Trash2, Info, Eye, EyeOff } from "lucide-react";
+import { Plus, MoreHorizontal, Phone, Trash2, Info, Eye, EyeOff, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { formatINR } from "@leafx/core";
-import { gstinSchema, phoneSchema } from "@leafx/types";
-import type { Party, PartyType } from "@leafx/types";
+import { gstinSchema, phoneSchema, stateNameFromGstin } from "@leafx/types";
+import type { Party, PartyType, GstinDetails } from "@leafx/types";
 import { api } from "../../lib/api";
 import { PageHeader } from "../../components/page-header";
 import { DataTable, type Column } from "../../components/data-table";
@@ -153,6 +153,11 @@ interface PartyDialogProps {
   trigger?: React.ReactNode;
 }
 
+// Session-scoped cache of resolved GSTIN lookups. Each successful lookup spends
+// one provider credit, so re-typing a GSTIN we've already resolved is served
+// from here — no second network call, no extra credit. Cleared on page reload.
+const gstinCache = new Map<string, GstinDetails>();
+
 function PartyDialog({ party, open, onOpenChange, trigger }: PartyDialogProps) {
   const qc = useQueryClient();
   const [showShipping, setShowShipping] = useState(false);
@@ -186,8 +191,106 @@ function PartyDialog({ party, open, onOpenChange, trigger }: PartyDialogProps) {
 
   const isEdit = !!party;
 
+  // GSTIN auto-fill: fetch the registered taxpayer's details and populate the
+  // form. `lastLookup` guards against re-fetching the same GSTIN (and against
+  // auto-fetching an existing party's own GSTIN when opening the edit dialog).
+  // `inFlight` is a synchronous guard so two near-simultaneous triggers (e.g. a
+  // debounced auto-fetch racing a manual click, or a StrictMode re-run) can
+  // never spend two credits on the same GSTIN.
+  const [gstLoading, setGstLoading] = useState(false);
+  const lastLookup = useRef<string>("");
+  const inFlight = useRef<string | null>(null);
+
+  // Fill the form from resolved details. Only overwrites name/address when empty
+  // so it never clobbers something the user typed.
+  const applyGstinDetails = (d: GstinDetails) => {
+    const fetchedName = d.tradeName?.trim() || d.legalName?.trim();
+    if (fetchedName && !form.getValues("name").trim()) {
+      form.setValue("name", fetchedName, { shouldValidate: true });
+    }
+
+    const dty = (d.taxpayerType ?? "").toLowerCase();
+    form.setValue(
+      "gstType",
+      dty.includes("comp")
+        ? "Registered Business - Composition"
+        : "Registered Business - Regular",
+    );
+
+    if (d.state) {
+      const match = INDIAN_STATES.find((s) => s.toLowerCase() === d.state!.toLowerCase());
+      if (match) form.setValue("state", match);
+    }
+
+    if (d.address?.trim() && !form.getValues("billingAddress").trim()) {
+      form.setValue("billingAddress", d.address.trim());
+    }
+  };
+
+  // `force` bypasses the cache (used by the manual re-fetch button); the
+  // debounced auto-fetch always prefers the cache to conserve credits.
+  const lookupGstin = async (raw: string, force = false) => {
+    const gstin = raw.toUpperCase();
+    if (!gstinSchema.safeParse(gstin).success) return;
+
+    // State is encoded in the GSTIN prefix — fill it with no network call.
+    const derivedState = stateNameFromGstin(gstin);
+    if (derivedState) form.setValue("state", derivedState);
+
+    // Already resolved this GSTIN this session → reuse it, spend no credit.
+    const cached = gstinCache.get(gstin);
+    if (cached && !force) {
+      lastLookup.current = gstin;
+      applyGstinDetails(cached);
+      return;
+    }
+
+    // A request for this exact GSTIN is already running — don't fire a second.
+    if (inFlight.current === gstin) return;
+    inFlight.current = gstin;
+    lastLookup.current = gstin;
+
+    setGstLoading(true);
+    try {
+      const d = await api.get<GstinDetails>(`/api/gst/lookup/${gstin}`);
+      gstinCache.set(gstin, d);
+      applyGstinDetails(d);
+      toast.success(`Fetched ${d.tradeName?.trim() || d.legalName?.trim() || gstin}`);
+    } catch (e) {
+      const code = e instanceof Error ? e.message : "";
+      if (code === "gst_lookup_unconfigured") {
+        // No provider key configured — state was still auto-filled offline.
+        if (derivedState) toast.info("GST lookup isn't configured; filled state from GSTIN");
+        else toast.error("GST lookup is not configured on the server");
+      } else if (code === "gstin_not_found") {
+        toast.error("No taxpayer found for this GSTIN");
+      } else {
+        toast.error("Could not fetch GSTIN details");
+      }
+    } finally {
+      setGstLoading(false);
+      inFlight.current = null;
+    }
+  };
+
+  // Auto-fetch once a complete, valid GSTIN has been entered (debounced).
+  const gstinValue = form.watch("gstin");
+  useEffect(() => {
+    const g = (gstinValue ?? "").toUpperCase();
+    if (g.length !== 15 || !gstinSchema.safeParse(g).success) return;
+    if (lastLookup.current === g) return;
+    const t = setTimeout(() => void lookupGstin(g), 600);
+    return () => clearTimeout(t);
+    // lookupGstin is stable within this render for the given form instance.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gstinValue]);
+
   useEffect(() => {
     if (open) {
+      // Seed the lookup guard with the current GSTIN so opening the dialog never
+      // auto-overwrites an existing party's details; typing a new one re-triggers.
+      lastLookup.current = (party?.gstin ?? "").toUpperCase();
+      setGstLoading(false);
       if (party) {
         form.reset({
           name: party.name,
@@ -252,6 +355,9 @@ function PartyDialog({ party, open, onOpenChange, trigger }: PartyDialogProps) {
         groupName: v.groupName.trim() || null,
         phone: v.phone || null,
         gstin: v.gstin ? v.gstin.toUpperCase() : null,
+        // Derive the 2-digit state code from the GSTIN so place-of-supply /
+        // interstate logic in GST returns has it without a separate lookup.
+        stateCode: v.gstin ? v.gstin.slice(0, 2) : null,
         openingBalance: v.openingBalance ?? 0,
         billingAddress: v.billingAddress || null,
         shippingAddress: v.shippingAddress || null,
@@ -349,32 +455,57 @@ function PartyDialog({ party, open, onOpenChange, trigger }: PartyDialogProps) {
               <FormField
                 control={form.control}
                 name="gstin"
-                render={({ field }) => (
+                render={({ field }) => {
+                  const gstinOk = gstinSchema.safeParse((field.value ?? "").toUpperCase()).success;
+                  return (
                   <FormItem className="space-y-0">
                     <FormControl>
                       <div className="relative">
                         <Input
-                          placeholder="GSTIN"
+                          placeholder="GSTIN — auto-fills details"
                           className="h-10 uppercase pr-9 placeholder:text-gray-400 text-sm"
                           {...field}
                           maxLength={15}
                           onChange={(e) => field.onChange(e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 15))}
                         />
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Info className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 cursor-help" />
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                              <p className="text-xs">15-character GST Identification Number</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        {gstLoading ? (
+                          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500 animate-spin" />
+                        ) : gstinOk ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => lookupGstin(field.value, true)}
+                                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-blue-500 hover:bg-blue-50 hover:text-blue-700"
+                                  aria-label="Fetch GSTIN details"
+                                >
+                                  <Search className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                <p className="text-xs">Fetch registered details for this GSTIN</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                <p className="text-xs">15-character GST Identification Number</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                       </div>
                     </FormControl>
                     <FormMessage className="text-xs mt-1" />
                   </FormItem>
-                )}
+                  );
+                }}
               />
 
               <FormField
