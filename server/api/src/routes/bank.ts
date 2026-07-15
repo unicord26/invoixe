@@ -25,18 +25,35 @@ bankRouter.get("/", async (req, res) => {
   res.json(accounts.map((a) => ({ ...a, balance: a.openingBalance + (map[a.id] ?? 0) })));
 });
 
+// GET /api/bank/entries — list recent bank transactions/entries
+bankRouter.get("/entries", async (req, res) => {
+  const businessId = await getUserBusinessId(req.authUser!);
+  const entries = await prisma.bankEntry.findMany({
+    where: { businessId },
+    orderBy: { date: "desc" },
+    take: 100,
+    include: { account: { select: { id: true, name: true, type: true } } },
+  });
+  res.json(entries);
+});
+
 // POST /api/bank — create an account
 bankRouter.post("/", async (req, res) => {
   const businessId = await getUserBusinessId(req.authUser!);
-  const { name, type, accountNo, ifsc, openingBalance } = req.body ?? {};
+  const { name, type, accountNo, ifsc, bankName, branch, holderName, upiId, openingBalance } = req.body ?? {};
   if (!name?.trim()) return res.status(400).json({ error: "name_required" });
+  const clean = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
   const account = await prisma.bankAccount.create({
     data: {
       businessId,
       name: String(name).trim(),
       type: ["bank", "cash", "upi"].includes(type) ? type : "bank",
-      accountNo: accountNo || null,
-      ifsc: ifsc || null,
+      accountNo: clean(accountNo),
+      ifsc: clean(ifsc),
+      bankName: clean(bankName),
+      branch: clean(branch),
+      holderName: clean(holderName),
+      upiId: clean(upiId),
       openingBalance: Number.isInteger(openingBalance) ? openingBalance : 0,
     },
   });

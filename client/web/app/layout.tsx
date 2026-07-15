@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Leafx — GST Billing & Accounting",
+  title: "Invoxia — GST Billing & Accounting",
   description: "Billing, accounting & inventory for Indian SMEs.",
   icons: {
     icon: "/logos.png",

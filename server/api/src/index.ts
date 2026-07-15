@@ -12,6 +12,7 @@ import { purchasesRouter } from "./routes/purchases";
 import { expensesRouter } from "./routes/expenses";
 import { documentsRouter } from "./routes/documents";
 import { bankRouter } from "./routes/bank";
+import { cardsRouter } from "./routes/cards";
 import { chequesRouter } from "./routes/cheques";
 import { loansRouter } from "./routes/loans";
 import { reportsRouter } from "./routes/reports";
@@ -75,7 +76,7 @@ app.get("/api/health", async (_req, res) => {
   const supabase = await supabaseHealth();
   res.status(supabase.db === "connected" ? 200 : 503).json({
     ok: supabase.db === "connected",
-    service: "leafx-api",
+    service: "invoxia-api",
     supabase,
     time: new Date().toISOString(),
   });
@@ -97,6 +98,7 @@ app.use("/api/purchases", requireAuth, purchasesRouter);
 app.use("/api/expenses", requireAuth, expensesRouter);
 app.use("/api/documents", requireAuth, documentsRouter);
 app.use("/api/bank", requireAuth, bankRouter);
+app.use("/api/cards", requireAuth, cardsRouter);
 app.use("/api/cheques", requireAuth, chequesRouter);
 app.use("/api/loans", requireAuth, loansRouter);
 app.use("/api/reports", requireAuth, reportsRouter);
@@ -105,7 +107,7 @@ app.use("/api", requireAuth, manufacturingRouter); // /api/bom, /api/production,
 
 const PORT = Number(process.env.API_PORT ?? 5000);
 app.listen(PORT, async () => {
-  console.log(`✓ Leafx API listening on http://localhost:${PORT}`);
+  console.log(`✓ Invoxia API listening on http://localhost:${PORT}`);
   // Startup handshake: confirm the Supabase connection before serving traffic.
   const sb = await supabaseHealth();
   if (sb.db === "connected") {

@@ -366,11 +366,35 @@ model BankAccount {
   type           String      @default("bank") // bank | cash | upi
   accountNo      String?
   ifsc           String?
+  bankName       String? // e.g. "HDFC Bank"
+  branch         String? // branch name / location
+  holderName     String? // account holder's name
+  upiId          String? // linked UPI VPA, e.g. name@okhdfcbank
   openingBalance Int         @default(0) // paise
   entries        BankEntry[]
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   deletedAt      DateTime?
+
+  @@index([businessId])
+}
+
+// Saved payment cards. PCI-SAFE BY DESIGN: we store ONLY non-sensitive
+// reference data — last 4 digits, network, and an expiry label for the user to
+// recognise the card. We NEVER store the full PAN, and NEVER the CVV (storing
+// CVV is prohibited by PCI-DSS). This is a wallet label, not a payment token.
+model PaymentCard {
+  id          String    @id @default(uuid())
+  businessId  String
+  label       String // nickname, e.g. "Business Amex"
+  network     String    @default("other") // visa | mastercard | rupay | amex | other
+  kind        String    @default("debit") // debit | credit
+  last4       String // last 4 digits only
+  expiryLabel String? // display-only "MM/YY"; not used for auth
+  holderName  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
   @@index([businessId])
 }

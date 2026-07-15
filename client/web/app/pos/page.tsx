@@ -41,7 +41,7 @@ export default function PosPage() {
       {/* items */}
       <div>
         <header className="mb-4 flex items-center justify-between">
-          <div><Link href="/" className="text-sm text-green-700 hover:underline">← Leafx</Link>
+          <div><Link href="/" className="text-sm text-green-700 hover:underline">← Invoxia</Link>
             <h1 className="text-2xl font-extrabold text-gray-900">POS</h1></div>
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search items…" className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500" />
         </header>

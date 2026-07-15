@@ -66,7 +66,7 @@ export default function DocumentsPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
-      <header className="mb-6"><Link href="/" className="text-sm text-green-700 hover:underline">← Leafx</Link>
+      <header className="mb-6"><Link href="/" className="text-sm text-green-700 hover:underline">← Invoxia</Link>
         <h1 className="text-2xl font-extrabold text-gray-900">Documents</h1></header>
 
       <div className="mb-6 flex flex-wrap gap-2">

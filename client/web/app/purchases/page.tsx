@@ -12,7 +12,7 @@ export default function PurchasesPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
       <header className="mb-8 flex items-end justify-between">
-        <div><Link href="/" className="text-sm text-green-700 hover:underline">← Leafx</Link>
+        <div><Link href="/" className="text-sm text-green-700 hover:underline">← Invoxia</Link>
           <h1 className="text-2xl font-extrabold text-gray-900">Purchases</h1></div>
         <Link href="/purchases/new" className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">+ New purchase</Link>
       </header>

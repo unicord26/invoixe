@@ -38,7 +38,7 @@ export default function BackupPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-10">
-      <header className="mb-8"><Link href="/" className="text-sm text-green-700 hover:underline">← Leafx</Link>
+      <header className="mb-8"><Link href="/" className="text-sm text-green-700 hover:underline">← Invoxia</Link>
         <h1 className="text-2xl font-extrabold text-gray-900">Backup &amp; Import</h1></header>
 
       <section className="mb-6 rounded-xl border border-green-200 bg-white p-5">

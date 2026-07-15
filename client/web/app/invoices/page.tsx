@@ -23,7 +23,7 @@ export default function InvoicesPage() {
     <main className="mx-auto max-w-4xl px-6 py-10">
       <header className="mb-8 flex items-end justify-between">
         <div>
-          <Link href="/" className="text-sm text-green-700 hover:underline">← Leafx</Link>
+          <Link href="/" className="text-sm text-green-700 hover:underline">← Invoxia</Link>
           <h1 className="text-2xl font-extrabold text-gray-900">Sale Invoices</h1>
         </div>
         <Link
