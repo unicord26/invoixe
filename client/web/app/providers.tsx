@@ -8,6 +8,7 @@ import { supabase } from "../lib/supabase";
 import { AppShell } from "../components/app-shell";
 import { ConnectionStatus } from "../components/connection-status";
 import { Toaster } from "@/components/ui/sonner";
+import { LoadingScreen } from "../components/loading-screen";
 
 type AuthState = { session: Session | null; signOut: () => Promise<void> };
 const AuthCtx = createContext<AuthState>({ session: null, signOut: async () => {} });
@@ -67,7 +68,7 @@ function AuthGate({ children }: { children: ReactNode }) {
     router.replace("/login");
   };
 
-  if (loading) return <div className="p-8 text-sm text-muted-foreground">Loading…</div>;
+  if (loading) return <LoadingScreen message="Verifying session..." />;
   if (!session && !isPublic) return null;
 
   // Public pages (login, storefront) render without the app shell.

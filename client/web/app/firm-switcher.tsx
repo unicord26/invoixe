@@ -28,7 +28,7 @@ import { Label } from "@/components/ui/label";
 
 type Firm = { id: string; name: string; role: string };
 
-const ACTIVE_KEY = "leafx.businessId";
+const ACTIVE_KEY = "invoixe.businessId";
 
 export function FirmSwitcher() {
   const qc = useQueryClient();

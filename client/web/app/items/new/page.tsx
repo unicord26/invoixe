@@ -38,7 +38,7 @@ const UNITS = ["PCS", "KG", "GM", "LTR", "ML", "BOX", "MTR", "DOZ", "PKT"];
 const CATEGORIES = ["General", "Services", "Raw Material", "Finished Goods"];
 
 const businessId = () =>
-  (typeof window !== "undefined" && localStorage.getItem("leafx.businessId")) || "shared";
+  (typeof window !== "undefined" && localStorage.getItem("invoixe.businessId")) || "shared";
 
 const formSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),

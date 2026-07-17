@@ -8,7 +8,7 @@ async function authHeaders(): Promise<Record<string, string>> {
   const token = data.session?.access_token;
   const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
   if (typeof window !== "undefined") {
-    const biz = localStorage.getItem("leafx.businessId");
+    const biz = localStorage.getItem("invoixe.businessId");
     if (biz) headers["x-business-id"] = biz;
   }
   return headers;

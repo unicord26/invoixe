@@ -57,9 +57,9 @@ jobs:
         run: |
           node dist/main.js > boot.log 2>&1 &
           for i in $(seq 1 20); do
-            grep -q "listening on" boot.log && break
+            grep -q "http://localhost:" boot.log && break
             sleep 1
           done
           cat boot.log
-          grep -q "listening on" boot.log
+          grep -q "http://localhost:" boot.log
         working-directory: server/api

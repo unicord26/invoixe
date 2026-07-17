@@ -69,7 +69,7 @@ export function ImageUpload({
   const box = shape === "wide" ? "h-24 w-full max-w-xs" : "h-24 w-24";
 
   return (
-    <div className={cn("inline-flex flex-col gap-2", className)}>
+    <div className={cn(shape === "wide" ? "flex w-full max-w-xs" : "inline-flex", "flex-col gap-2", className)}>
       <input
         ref={inputRef}
         type="file"
@@ -104,7 +104,7 @@ export function ImageUpload({
         <div
           className={cn(
             "group relative flex items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50 transition",
-            !disabled && "cursor-pointer hover:border-green-500",
+            !disabled && "cursor-pointer hover:border-teal-500",
             box
           )}
           onClick={pick}
@@ -125,7 +125,7 @@ export function ImageUpload({
 
           {uploading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/70">
-              <Loader2 className="h-5 w-5 animate-spin text-green-600" />
+              <Loader2 className="h-5 w-5 animate-spin text-teal-600" />
             </div>
           )}
 
