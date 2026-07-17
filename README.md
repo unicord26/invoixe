@@ -225,7 +225,7 @@ A failed check prints `✗` with the reason and the summary says so rather than
 "ready" — if the database is unreachable you learn it here, not from a blank
 screen later. Set `API_VERBOSE=true` for Nest's full per-route logs.
 
-Visit **[http://localhost:3000](http://localhost:3000)** in your browser, enter username `admin` and password `admin123` to log in, and begin managing your business!
+Visit **[http://localhost:3000](http://localhost:3000)** in your browser and sign in using your credentials (refer to your local secrets or contact your team for development environment credentials) to begin managing your business!
 
 ---
 
