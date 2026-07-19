@@ -8,6 +8,30 @@ import { CurrentUser, SupabaseAuthGuard } from "../common/supabase-auth.guard";
 
 type Bal = { name: string; type: string; balance: number };
 
+function getRangeStartDate(range: string): Date | null {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  switch (range) {
+    case "1D":
+      return d;
+    case "7D":
+      d.setDate(d.getDate() - 7);
+      return d;
+    case "1M":
+      d.setMonth(d.getMonth() - 1);
+      return d;
+    case "1Y":
+      d.setFullYear(d.getFullYear() - 1);
+      return d;
+    case "5Y":
+      d.setFullYear(d.getFullYear() - 5);
+      return d;
+    case "All":
+    default:
+      return null;
+  }
+}
+
 @Injectable()
 export class ReportsService {
   constructor(private readonly prisma: PrismaClient) {}
@@ -29,18 +53,22 @@ export class ReportsService {
   }
 
   /** Headline numbers for the home dashboard cards. */
-  async dashboard(user: AuthUser) {
+  async dashboard(user: AuthUser, range = "1D") {
     const businessId = await getUserBusinessId(user);
 
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
+    const startDate = getRangeStartDate(range);
     const startOfWeek = new Date();
     startOfWeek.setDate(startOfWeek.getDate() - 7);
 
-    const [todaySalesAgg, partiesCount, newPartiesCount, products, stockMap, bankEntries, bankAccounts] =
+    const [salesAgg, partiesCount, newPartiesCount, products, stockMap, bankEntries, bankAccounts] =
       await Promise.all([
         this.prisma.transaction.aggregate({
-          where: { businessId, deletedAt: null, type: "sale", date: { gte: startOfToday } },
+          where: { 
+            businessId, 
+            deletedAt: null, 
+            type: "sale", 
+            ...(startDate ? { date: { gte: startDate } } : {}) 
+          },
           _sum: { grandTotal: true },
         }),
         this.prisma.party.count({ where: { businessId, deletedAt: null } }),
@@ -70,7 +98,7 @@ export class ReportsService {
     const cashBank = bankAccounts.reduce((sum, a) => sum + a.openingBalance + (entryMap[a.id] ?? 0), 0);
 
     return {
-      todaySales: todaySalesAgg._sum.grandTotal ?? 0,
+      todaySales: salesAgg._sum.grandTotal ?? 0,
       partiesCount,
       newPartiesThisWeek: newPartiesCount,
       itemsCount: products.length,
@@ -80,19 +108,24 @@ export class ReportsService {
   }
 
   /** Headline P&L + receivable/payable numbers. */
-  async summary(user: AuthUser, monthOnly = false) {
+  async summary(user: AuthUser, monthOnly = false, range?: string) {
     const businessId = await getUserBusinessId(user);
 
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
+    let startDate: Date | null = null;
+    if (range) {
+      startDate = getRangeStartDate(range);
+    } else if (monthOnly) {
+      startDate = new Date();
+      startDate.setDate(1);
+      startDate.setHours(0, 0, 0, 0);
+    }
 
     const agg = await this.prisma.transaction.groupBy({
       by: ["type"],
       where: {
         businessId,
         deletedAt: null,
-        ...(monthOnly ? { date: { gte: startOfMonth } } : {}),
+        ...(startDate ? { date: { gte: startDate } } : {}),
       },
       _sum: { grandTotal: true, subTotal: true, totalTax: true },
     });
@@ -184,6 +217,100 @@ export class ReportsService {
       select: { id: true, type: true, number: true, date: true, partyName: true, grandTotal: true },
     });
   }
+
+  /** Grouped sales/expenses trend for the graph. */
+  async trend(user: AuthUser, range: string) {
+    const businessId = await getUserBusinessId(user);
+    const startDate = getRangeStartDate(range);
+
+    const transactions = await this.prisma.transaction.findMany({
+      where: {
+        businessId,
+        deletedAt: null,
+        type: { in: ["sale", "purchase", "expense"] },
+        ...(startDate ? { date: { gte: startDate } } : {}),
+      },
+      select: { type: true, grandTotal: true, date: true },
+      orderBy: { date: "asc" },
+    });
+
+    const now = new Date();
+    interface Point {
+      label: string;
+      sales: number;
+      expenses: number;
+      start: Date;
+      end: Date;
+    }
+    const points: Point[] = [];
+
+    if (range === "1D") {
+      // 8 intervals of 3 hours
+      for (let i = 7; i >= 0; i--) {
+        const start = new Date(now.getTime() - (i + 1) * 3 * 60 * 60 * 1000);
+        const end = new Date(now.getTime() - i * 3 * 60 * 60 * 1000);
+        const label = start.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: true });
+        points.push({ label, sales: 0, expenses: 0, start, end });
+      }
+    } else if (range === "7D") {
+      // 7 calendar days
+      for (let i = 6; i >= 0; i--) {
+        const start = new Date();
+        start.setDate(now.getDate() - i);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(start);
+        end.setHours(23, 59, 59, 999);
+        const label = start.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+        points.push({ label, sales: 0, expenses: 0, start, end });
+      }
+    } else if (range === "1M") {
+      // 30 calendar days
+      for (let i = 29; i >= 0; i--) {
+        const start = new Date();
+        start.setDate(now.getDate() - i);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(start);
+        end.setHours(23, 59, 59, 999);
+        const label = start.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+        points.push({ label, sales: 0, expenses: 0, start, end });
+      }
+    } else if (range === "1Y") {
+      // 12 calendar months
+      for (let i = 11; i >= 0; i--) {
+        const start = new Date(now.getFullYear(), now.getMonth() - i, 1, 0, 0, 0, 0);
+        const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
+        const label = start.toLocaleDateString(undefined, { month: "short" });
+        points.push({ label, sales: 0, expenses: 0, start, end });
+      }
+    } else {
+      // 5 years or all
+      const years = range === "5Y" ? 5 : 5;
+      for (let i = years - 1; i >= 0; i--) {
+        const start = new Date(now.getFullYear() - i, 0, 1, 0, 0, 0, 0);
+        const end = new Date(now.getFullYear() - i, 11, 31, 23, 59, 59, 999);
+        const label = start.toLocaleDateString(undefined, { year: "numeric" });
+        points.push({ label, sales: 0, expenses: 0, start, end });
+      }
+    }
+
+    for (const tx of transactions) {
+      const txTime = new Date(tx.date).getTime();
+      const pt = points.find(p => txTime >= p.start.getTime() && txTime <= p.end.getTime());
+      if (pt) {
+        if (tx.type === "sale") {
+          pt.sales += tx.grandTotal;
+        } else if (tx.type === "purchase" || tx.type === "expense") {
+          pt.expenses += tx.grandTotal;
+        }
+      }
+    }
+
+    return points.map(p => ({
+      label: p.label,
+      sales: p.sales,
+      expenses: p.expenses
+    }));
+  }
 }
 
 @Controller("reports")
@@ -192,13 +319,17 @@ export class ReportsController {
   constructor(private readonly reports: ReportsService) {}
 
   @Get("dashboard")
-  dashboard(@CurrentUser() user: AuthUser) {
-    return this.reports.dashboard(user);
+  dashboard(@CurrentUser() user: AuthUser, @Query("range") range?: string) {
+    return this.reports.dashboard(user, range);
   }
 
   @Get("summary")
-  summary(@CurrentUser() user: AuthUser, @Query("monthOnly") monthOnly?: string) {
-    return this.reports.summary(user, monthOnly === "true");
+  summary(
+    @CurrentUser() user: AuthUser,
+    @Query("monthOnly") monthOnly?: string,
+    @Query("range") range?: string,
+  ) {
+    return this.reports.summary(user, monthOnly === "true", range);
   }
 
   @Get("outstanding")
@@ -219,6 +350,11 @@ export class ReportsController {
   @Get("daybook")
   daybook(@CurrentUser() user: AuthUser) {
     return this.reports.daybook(user);
+  }
+
+  @Get("trend")
+  trend(@CurrentUser() user: AuthUser, @Query("range") range?: string) {
+    return this.reports.trend(user, range ?? "7D");
   }
 }
 

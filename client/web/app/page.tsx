@@ -14,11 +14,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
   const [greeting, setGreeting] = useState("Welcome back");
+  const [range, setRange] = useState<"1D" | "7D" | "1M" | "1Y" | "5Y" | "All">("7D");
 
   useEffect(() => {
     const hrs = new Date().getHours();
@@ -39,6 +41,7 @@ export default function Home() {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
       queryClient.invalidateQueries({ queryKey: ["summary"] }),
+      queryClient.invalidateQueries({ queryKey: ["trend"] }),
       queryClient.invalidateQueries({ queryKey: ["daybook"] }),
       queryClient.invalidateQueries({ queryKey: ["stock"] }),
       queryClient.invalidateQueries({ queryKey: ["outstanding"] })
@@ -61,7 +64,25 @@ export default function Home() {
             Monitor and administer your business accounts and GST filings in real-time.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Range Selector Switcher */}
+          <div className="inline-flex rounded-xl border border-zinc-200 bg-zinc-50 p-0.5 shadow-inner">
+            {(["1D", "7D", "1M", "1Y", "5Y", "All"] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 text-xs font-bold transition-all",
+                  range === r
+                    ? "bg-white text-zinc-900 shadow-sm border border-zinc-200/50"
+                    : "text-zinc-500 hover:text-zinc-900"
+                )}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+
           {/* Refresh Action */}
           <Button
             variant="outline"
@@ -83,28 +104,24 @@ export default function Home() {
       </div>
 
       {/* 2. Key Performance Indicators */}
-      <DashboardKPIs />
+      <DashboardKPIs range={range} />
 
       {/* 3. Primary Actions Console */}
       <QuickActions />
 
       {/* 4. Core Analytics Grid (2/3 & 1/3 splits) */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left Span: Sales Chart + Activity ledger */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
+        {/* Left Column: Sales Chart & Activity ledger */}
         <div className="lg:col-span-2 space-y-6">
-          <DashboardCharts />
+          <DashboardCharts range={range} />
+          <DashboardActivity />
         </div>
 
-        {/* Right Span: Financial health status checks & alerts */}
+        {/* Right Column: Financial health status checks, balance & alerts */}
         <div className="lg:col-span-1">
           <DashboardAlerts />
         </div>
       </div>
-
-      {/* 5. Recent Transactions Feed - Full Width */}
-      <DashboardActivity />
-
-
     </div>
   );
 }
