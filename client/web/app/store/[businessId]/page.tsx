@@ -37,7 +37,7 @@ export default function StorePage({ params }: { params: Promise<{ businessId: st
   };
 
   return (
-    <main className="mx-auto max-w-[1600px] px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-10">
       <header className="mb-6 flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-600 font-extrabold text-white">LX</div>
         <div><h1 className="text-2xl font-extrabold text-green-700">{data.business.name}</h1>

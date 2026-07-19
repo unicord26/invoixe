@@ -10,7 +10,7 @@ type Row = { id: string; number: string; date: string; partyName: string | null;
 export default function PurchasesPage() {
   const { data, isLoading } = useQuery({ queryKey: ["purchases"], queryFn: () => api.get<Row[]>("/api/purchases") });
   return (
-    <main className="mx-auto max-w-[1600px] px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-10">
       <header className="mb-8 flex items-end justify-between">
         <div><Link href="/" className="text-sm text-green-700 hover:underline">← Invoixe</Link>
           <h1 className="text-2xl font-extrabold text-gray-900">Purchases</h1></div>

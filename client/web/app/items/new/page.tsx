@@ -149,7 +149,7 @@ function NewItemForm() {
 
   return (
     <Form {...form}>
-      <main className="mx-auto max-w-[1600px] px-6 py-6">
+      <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6">
         
         {/* Custom Header Row mimicking the screenshot */}
         <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-6">
@@ -203,7 +203,7 @@ function NewItemForm() {
 
         {/* Upper Form Fields (Layout matched to Vyapar) */}
         <div className="bg-white border border-gray-100 rounded-xl shadow-xs p-6 mb-6">
-          <div className="grid grid-cols-[1.5fr_1.2fr_1fr_1.2fr] gap-4 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.5fr_1.2fr_1fr_1.2fr] gap-4 items-start">
             
             {/* Col 1: Item Name */}
             <FormField
@@ -286,7 +286,7 @@ function NewItemForm() {
             />
           </div>
 
-          <div className="grid grid-cols-[1.5fr_1.2fr_2.2fr] gap-4 items-start mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-[1.5fr_1.2fr_2.2fr] gap-4 items-start mt-4">
             {/* Category */}
             <FormField
               control={form.control}
@@ -389,7 +389,7 @@ function NewItemForm() {
                 <h3 className="text-sm font-bold text-gray-700">Sale Price</h3>
                 
                 {/* Row 1: Sale Price Input + With/Without Tax Select */}
-                <div className="grid grid-cols-[1.5fr_1fr] gap-4 items-end">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                   <FormField
                     control={form.control}
                     name="salePrice"
@@ -425,7 +425,7 @@ function NewItemForm() {
                 </div>
 
                 {/* Row 2: Discount Input + Percentage/Amount Select */}
-                <div className="grid grid-cols-[1.5fr_1fr] gap-4 items-end">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                   <FormField
                     control={form.control}
                     name="discountValue"
@@ -496,7 +496,7 @@ function NewItemForm() {
                         </button>
                       </div>
                       
-                      <div className="grid grid-cols-[1.5fr_1fr] gap-4 items-end">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                         <FormField
                           control={form.control}
                           name="wholesalePrice"
@@ -540,7 +540,7 @@ function NewItemForm() {
                 <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-xs space-y-4 min-h-[178px]">
                   <h3 className="text-sm font-bold text-gray-700">Purchase Price</h3>
                   
-                  <div className="grid grid-cols-[1.5fr_1fr] gap-4 items-end">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                     <FormField
                       control={form.control}
                       name="purchasePrice"

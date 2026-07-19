@@ -263,14 +263,22 @@ export function AppShell({
     setMobileOpen(false);
   }, [pathname]);
 
+  // Derive a readable page label from the current pathname for the mobile bar.
+  const pageLabel = (() => {
+    const seg = pathname.split("/").filter(Boolean)[0];
+    if (!seg) return "Dashboard";
+    return seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, " ");
+  })();
+
   return (
     <div className="min-h-screen bg-[#f8faf9] lg:grid lg:grid-cols-[260px_1fr]">
       {/* Mobile top bar */}
       <header className="flex items-center gap-3 px-4 py-3 bg-[#0a160f] text-white lg:hidden border-b border-[#112419] sticky top-0 z-20">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
-            <button className="p-1 rounded-md hover:bg-white/5" aria-label="Open navigation menu">
-              <Menu className="w-6 h-6" />
+            {/* 44px min touch target for accessibility */}
+            <button className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-md hover:bg-white/5" aria-label="Open navigation menu">
+              <Menu className="w-5 h-5" />
             </button>
           </SheetTrigger>
           <SheetContent
@@ -286,10 +294,10 @@ export function AppShell({
             />
           </SheetContent>
         </Sheet>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Invoixe" className="w-7 h-7" />
-          <span className="font-bold text-base tracking-tight">Invoixe</span>
+          <img src="/logo.png" alt="Invoixe" className="w-6 h-6 shrink-0" />
+          <span className="font-bold text-sm tracking-tight text-zinc-300 truncate">{pageLabel}</span>
         </div>
       </header>
 

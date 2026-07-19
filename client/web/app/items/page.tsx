@@ -327,7 +327,7 @@ function ItemsList() {
     : [];
 
   return (
-    <main className="mx-auto max-w-[1600px] px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-10">
       <PageHeader
         title={rawOnly ? "Raw Items" : "Product List"}
         description={`${filteredRows?.length ?? 0} ${rawOnly ? "raw materials" : "products & services"}`}

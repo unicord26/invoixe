@@ -54,7 +54,7 @@ export default function NewPurchasePage() {
   const canSave = lines.some((l) => Number(l.qty) > 0 && l.rateRupees !== "" && l.description.trim()) && !save.isPending;
 
   return (
-    <main className="mx-auto max-w-[1600px] px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-10">
       <header className="mb-6"><Link href="/purchases" className="text-sm text-green-700 hover:underline">← Purchases</Link>
         <h1 className="text-2xl font-extrabold text-gray-900">New Purchase Bill</h1></header>
 

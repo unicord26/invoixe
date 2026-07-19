@@ -25,7 +25,7 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <header className={cn("mb-8 flex flex-wrap items-end justify-between gap-4", className)}>
+    <header className={cn("mb-6 sm:mb-8 flex flex-wrap items-end justify-between gap-3 sm:gap-4", className)}>
       <div className="min-w-0">
         {backHref && (
           <Link
@@ -36,8 +36,8 @@ export function PageHeader({
             {backLabel}
           </Link>
         )}
-        <h1 className="truncate text-2xl font-extrabold tracking-tight text-gray-900">{title}</h1>
-        {description && <p className="mt-0.5 text-sm text-gray-500">{description}</p>}
+        <h1 className="truncate text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900">{title}</h1>
+        {description && <p className="mt-0.5 text-xs sm:text-sm text-gray-500">{description}</p>}
       </div>
       {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
     </header>

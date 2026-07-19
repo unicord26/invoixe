@@ -101,7 +101,7 @@ export default function ReportsPage() {
       {/* ── P&L KPIs ── */}
       <div>
         <SectionLabel>Profit &amp; Loss</SectionLabel>
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Total Sales"
             value={s?.sales ?? 0}
@@ -135,7 +135,7 @@ export default function ReportsPage() {
       {/* ── Balances KPIs ── */}
       <div>
         <SectionLabel>Balances &amp; Tax</SectionLabel>
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Receivables"
             value={s?.receivables ?? 0}

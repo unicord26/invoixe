@@ -180,16 +180,16 @@ function EmployeeDialog({ employee, open, onOpenChange, trigger }: EmployeeDialo
     <Dialog open={open} onOpenChange={handleClose}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
 
-      <DialogContent className="max-w-[700px] p-0 gap-0 overflow-hidden rounded-xl">
-        <DialogHeader className="px-6 pt-5 pb-4 border-b border-zinc-100">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-[700px] p-0 gap-0 overflow-hidden rounded-xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="px-6 pt-5 pb-4 border-b border-zinc-100 shrink-0">
           <DialogTitle className="text-xl font-semibold text-zinc-900">
             {isEdit ? "Edit Employee Details" : "Add New Employee"}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((v) => submitForm(v, false))}>
-            <div className="px-6 py-6 grid grid-cols-2 gap-4 bg-white">
+          <form onSubmit={form.handleSubmit((v) => submitForm(v, false))} className="flex flex-col overflow-hidden">
+            <div className="px-6 py-6 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white overflow-y-auto">
               <FormField
                 control={form.control}
                 name="name"
@@ -359,7 +359,7 @@ function EmployeeDialog({ employee, open, onOpenChange, trigger }: EmployeeDialo
               />
             </div>
 
-            <DialogFooter className="px-6 py-4 border-t border-zinc-100 bg-zinc-50/60 flex-row items-center justify-end gap-3">
+            <DialogFooter className="px-6 py-4 border-t border-zinc-100 bg-zinc-50/60 flex-row items-center justify-end gap-3 shrink-0">
               {!isEdit && (
                 <Button
                   type="button"
@@ -515,7 +515,7 @@ export default function EmployeesPage() {
   ];
 
   return (
-    <main className="mx-auto max-w-[1600px] px-6 py-8">
+    <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-8">
       {/* Breadcrumb link */}
       <div className="mb-6">
         <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-800 transition">

@@ -427,19 +427,19 @@ function PartyDialog({ party, open, onOpenChange, trigger }: PartyDialogProps) {
     <Dialog open={open} onOpenChange={handleClose}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
 
-      <DialogContent className="max-w-[860px] p-0 gap-0 overflow-hidden rounded-xl">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-[860px] p-0 gap-0 overflow-hidden rounded-xl max-h-[90vh] flex flex-col">
         {/* Dialog header */}
-        <DialogHeader className="px-6 pt-5 pb-4 border-b border-gray-100">
+        <DialogHeader className="px-6 pt-5 pb-4 border-b border-gray-100 shrink-0">
           <DialogTitle className="text-xl font-semibold text-gray-900">
             {isEdit ? "Edit Party" : "Add Party"}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((v) => submitForm(v, false))}>
+          <form onSubmit={form.handleSubmit((v) => submitForm(v, false))} className="flex flex-col overflow-hidden">
 
             {/* ── Top row: Party Name · GSTIN · Phone ── */}
-            <div className="px-6 py-4 grid grid-cols-3 gap-3 bg-white border-b border-gray-100">
+            <div className="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white border-b border-gray-100 shrink-0">
               <FormField
                 control={form.control}
                 name="name"
@@ -557,8 +557,8 @@ function PartyDialog({ party, open, onOpenChange, trigger }: PartyDialogProps) {
               </div>
 
               {/* ── GST & Address ── */}
-              <TabsContent value="gst" className="m-0 bg-white">
-                <div className="px-6 pt-5 pb-5 grid grid-cols-[188px_1fr_1fr] gap-6 min-h-[240px]">
+              <TabsContent value="gst" className="m-0 bg-white overflow-y-auto">
+                <div className="px-6 pt-5 pb-5 grid grid-cols-1 sm:grid-cols-[188px_1fr_1fr] gap-6 min-h-[240px]">
 
                   {/* Left: GST Type, State, Email */}
                   <div className="flex flex-col gap-3">
@@ -861,11 +861,11 @@ function PartyDialog({ party, open, onOpenChange, trigger }: PartyDialogProps) {
               </TabsContent>
 
               {/* ── Credit & Balance (With status/category helper fields) ── */}
-              <TabsContent value="credit" className="m-0 bg-white">
+              <TabsContent value="credit" className="m-0 bg-white overflow-y-auto">
                 <div className="px-6 pt-5 pb-5 flex flex-col gap-4 min-h-[240px]">
                   
                   {/* Row 1: Opening Balance + As Of Date */}
-                  <div className="grid grid-cols-2 gap-x-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
                     <FormField
                       control={form.control}
                       name="openingBalance"
@@ -950,7 +950,7 @@ function PartyDialog({ party, open, onOpenChange, trigger }: PartyDialogProps) {
                   )}
 
                   {/* Row 4: Party Type, Status, Credit Period, Group/Category */}
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-4 border-t border-gray-100 pt-4 mt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 border-t border-gray-100 pt-4 mt-2">
                     <FormField
                       control={form.control}
                       name="type"
@@ -1374,7 +1374,7 @@ export default function PartiesPage() {
   ];
 
   return (
-    <main className="mx-auto max-w-[1600px] px-6 py-8">
+    <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-8">
       {/* Breadcrumb Header */}
       <div className="mb-6">
         <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-800 transition">

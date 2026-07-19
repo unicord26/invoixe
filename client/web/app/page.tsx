@@ -53,18 +53,18 @@ export default function Home() {
   };
 
   return (
-    <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+    <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 space-y-6">
       {/* 1. Header / Welcome Area */}
-      <div className="flex flex-col justify-between gap-4 border-b border-gray-100 pb-6 md:flex-row md:items-center dark:border-zinc-800">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+      <div className="flex flex-col gap-3 border-b border-gray-100 pb-5 sm:flex-row sm:items-start sm:justify-between dark:border-zinc-800">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl dark:text-white">
             {greeting}, User
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-xs text-gray-500 sm:text-sm">
             Monitor and administer your business accounts and GST filings in real-time.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           {/* Range Selector Switcher */}
           <div className="inline-flex rounded-xl border border-zinc-200 bg-zinc-50 p-0.5 shadow-inner">
             {(["1D", "7D", "1M", "1Y", "5Y", "All"] as const).map((r) => (
@@ -72,7 +72,7 @@ export default function Home() {
                 key={r}
                 onClick={() => setRange(r)}
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-bold transition-all",
+                  "rounded-lg px-2.5 py-1.5 text-xs font-bold transition-all",
                   range === r
                     ? "bg-white text-zinc-900 shadow-sm border border-zinc-200/50"
                     : "text-zinc-500 hover:text-zinc-900"
@@ -92,13 +92,14 @@ export default function Home() {
             className="h-9 gap-2 rounded-xl text-gray-500 border-gray-200 dark:border-zinc-800 dark:text-zinc-400"
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
 
-          {/* Real-time date display */}
-          <div className="flex h-9 items-center gap-2 rounded-xl bg-gray-100 px-4 text-xs font-bold text-gray-500 dark:bg-zinc-900 dark:text-zinc-400">
-            <CalendarDays className="h-4 w-4 text-gray-400" />
-            {today}
+          {/* Date display — full on sm+, short on xs */}
+          <div className="flex h-9 items-center gap-2 rounded-xl bg-gray-100 px-3 text-xs font-bold text-gray-500 dark:bg-zinc-900 dark:text-zinc-400">
+            <CalendarDays className="h-4 w-4 text-gray-400 shrink-0" />
+            <span className="hidden sm:inline">{today}</span>
+            <span className="sm:hidden">{new Date().toLocaleDateString(undefined, { day: "numeric", month: "short" })}</span>
           </div>
         </div>
       </div>

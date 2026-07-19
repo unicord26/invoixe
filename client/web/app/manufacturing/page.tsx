@@ -124,7 +124,7 @@ export default function ManufacturingPage() {
   const hasShortages = requirements.some((r) => r.shortage > 0);
 
   return (
-    <main className="mx-auto max-w-[1600px] px-6 py-8">
+    <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-8">
       {/* Breadcrumb Header */}
       <div className="mb-6">
         <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-800 transition">
@@ -144,7 +144,7 @@ export default function ManufacturingPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-12 gap-6 lg:gap-8">
         {/* Left Side: Product List */}
         <div className="lg:col-span-4 space-y-4">
           <Card className="border border-zinc-200 shadow-sm rounded-xl">

@@ -65,7 +65,7 @@ export default function DocumentsPage() {
   const input = "w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm outline-none focus:border-green-500";
 
   return (
-    <main className="mx-auto max-w-[1600px] px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-10">
       <header className="mb-6"><Link href="/" className="text-sm text-green-700 hover:underline">← Invoixe</Link>
         <h1 className="text-2xl font-extrabold text-gray-900">Documents</h1></header>
 
