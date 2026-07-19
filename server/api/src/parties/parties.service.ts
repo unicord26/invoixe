@@ -22,15 +22,14 @@ export class PartiesService {
       where: { businessId, deletedAt: null },
       orderBy: { name: "asc" },
     });
-    const grouped = await this.prisma.transaction.groupBy({
-      by: ["partyId", "type"],
+    const txns = await this.prisma.transaction.findMany({
       where: { businessId, deletedAt: null, partyId: { not: null } },
-      _sum: { grandTotal: true },
+      select: { partyId: true, type: true, grandTotal: true },
     });
     const balanceMap: Record<string, number> = {};
-    for (const g of grouped) {
-      if (!g.partyId) continue;
-      balanceMap[g.partyId] = (balanceMap[g.partyId] ?? 0) + signedBalanceDelta(g.type, g._sum.grandTotal ?? 0);
+    for (const t of txns) {
+      if (!t.partyId) continue;
+      balanceMap[t.partyId] = (balanceMap[t.partyId] ?? 0) + signedBalanceDelta(t.type, t.grandTotal);
     }
     return parties.map((p) => ({
       ...p,
