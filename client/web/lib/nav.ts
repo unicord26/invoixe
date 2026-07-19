@@ -24,6 +24,7 @@ export type NavLeaf = {
   href: string;
   icon?: LucideIcon;
   soon?: boolean;
+  new?: boolean;
   /** Short blurb shown on the dashboard module cards (and usable as a tooltip). */
   desc?: string;
 };
@@ -87,7 +88,7 @@ export const NAV: NavSection[] = [
     category: "Core Operations",
     items: [
       { label: "Parties", href: "/parties", icon: Contact, desc: "Customers & suppliers" },
-      { label: "Employees", href: "/employees", icon: Users, desc: "Staff & payroll" },
+      { label: "Employees", href: "/employees", icon: Users, new: true, desc: "Staff & payroll" },
       {
         label: "Items",
         icon: Package,

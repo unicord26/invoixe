@@ -42,18 +42,25 @@ function NavLink({
       href={item.href}
       onClick={onNavigate}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors border border-transparent",
+        "flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors border border-transparent",
         active
           ? "bg-[#133020] text-zinc-100 shadow-sm border-[#1b432c]/50"
           : "text-zinc-400 hover:text-white hover:bg-white/5"
       )}
     >
-      {item.icon ? (
-        <item.icon className="w-[18px] h-[18px] shrink-0" />
-      ) : (
-        <span className="w-1.5 h-1.5 rounded-full bg-current opacity-50 mx-[6px]" />
+      <span className="flex items-center gap-3">
+        {item.icon ? (
+          <item.icon className="w-[18px] h-[18px] shrink-0" />
+        ) : (
+          <span className="w-1.5 h-1.5 rounded-full bg-current opacity-50 mx-[6px]" />
+        )}
+        <span>{item.label}</span>
+      </span>
+      {item.new && (
+        <span className="text-[9px] uppercase font-extrabold tracking-widest text-emerald-400 shrink-0 pr-1 select-none">
+          • New
+        </span>
       )}
-      <span>{item.label}</span>
     </Link>
   );
 }
