@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -34,7 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const UNITS = ["PCS", "KG", "GM", "LTR", "ML", "BOX", "MTR", "DOZ", "PKT"];
+const UNITS = ["PCS", "NOS", "KG", "GM", "LTR", "ML", "BOX", "MTR", "DOZ", "PKT"];
 const CATEGORIES = ["General", "Services", "Raw Material", "Finished Goods"];
 
 const businessId = () =>
@@ -98,14 +98,26 @@ const DEFAULTS: FormValues = {
   location: "",
 };
 
-export default function NewItemPage() {
+function NewItemForm() {
   const router = useRouter();
   const qc = useQueryClient();
+  const searchParams = useSearchParams();
+  const isRawQuery = searchParams.get("category") === "raw";
+  const defaultCategory = isRawQuery ? "Raw Material" : "General";
+
   const [showWholesale, setShowWholesale] = useState(false);
   const [activeTab, setActiveTab] = useState("pricing");
 
-  const form = useForm<FormValues>({ resolver: zodResolver(formSchema), defaultValues: DEFAULTS });
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      ...DEFAULTS,
+      category: defaultCategory,
+    },
+  });
   const type = form.watch("type");
+  const category = form.watch("category");
+  const isRaw = category === "Raw Material";
 
   const create = useMutation({
     mutationFn: (v: FormValues) =>
@@ -115,6 +127,7 @@ export default function NewItemPage() {
         hsnSac: v.hsnSac.trim() || null,
         unit: v.unit,
         itemCode: v.itemCode.trim() || null,
+        categoryName: v.category || null,
         taxRate: v.taxRate,
         taxInclusive: v.taxInclusive,
         salePrice: v.salePrice ?? 0,
@@ -200,7 +213,7 @@ export default function NewItemPage() {
                 <FormItem className="space-y-1">
                   <FormControl>
                     <Input
-                      placeholder={type === "service" ? "Service Name *" : "Item Name *"}
+                      placeholder={isRaw ? "Raw Item Name *" : (type === "service" ? "Service Name *" : "Item Name *")}
                       {...field}
                       className="h-10 placeholder:text-gray-400 text-sm border-gray-300"
                     />
@@ -219,7 +232,7 @@ export default function NewItemPage() {
                   <FormControl>
                     <div className="relative">
                       <Input
-                        placeholder={type === "service" ? "Service HSN" : "Item HSN"}
+                        placeholder={isRaw ? "Raw Item HSN" : (type === "service" ? "Service HSN" : "Item HSN")}
                         {...field}
                         className="h-10 placeholder:text-gray-400 text-sm border-gray-300 pr-9"
                       />
@@ -280,6 +293,7 @@ export default function NewItemPage() {
               name="category"
               render={({ field }) => (
                 <FormItem className="space-y-1">
+                  <FormLabel className="text-xs font-bold text-gray-500">Category</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger className="h-10 text-sm border-gray-300">
@@ -303,10 +317,11 @@ export default function NewItemPage() {
               name="itemCode"
               render={({ field }) => (
                 <FormItem className="space-y-1">
+                  <FormLabel className="text-xs font-bold text-gray-500">{isRaw ? "Raw Item Code" : "Item Code"}</FormLabel>
                   <FormControl>
                     <div className="flex gap-2 items-center">
                       <Input
-                        placeholder={type === "service" ? "Service Code" : "Item Code"}
+                        placeholder={isRaw ? "Raw Item Code" : (type === "service" ? "Service Code" : "Item Code")}
                         {...field}
                         className="h-10 placeholder:text-gray-400 text-sm border-gray-300 flex-1"
                       />
@@ -731,5 +746,13 @@ export default function NewItemPage() {
 
       </main>
     </Form>
+  );
+}
+
+export default function NewItemPage() {
+  return (
+    <Suspense fallback={null}>
+      <NewItemForm />
+    </Suspense>
   );
 }

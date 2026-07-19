@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, MoreHorizontal, Phone, Trash2, Info, Eye, EyeOff, Loader2, Search } from "lucide-react";
+import { Plus, MoreHorizontal, Phone, Trash2, Info, Eye, EyeOff, Loader2, Search, Users, CheckCircle, ArrowUpRight, ArrowDownLeft, ArrowLeft, Pencil, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { formatINR } from "@invoixe/core";
 import { gstinSchema, phoneSchema, stateNameFromGstin } from "@invoixe/types";
@@ -17,6 +17,7 @@ import { DataTable, type Column } from "../../components/data-table";
 import { MoneyInput } from "../../components/money-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -1192,7 +1193,7 @@ function PartyDialog({ party, open, onOpenChange, trigger }: PartyDialogProps) {
                 <Button
                   type="button"
                   variant="outline"
-                  className="rounded-full px-6 border-blue-500 text-blue-600 hover:bg-blue-50 font-medium"
+                  className="rounded-full px-6 border-green-600 text-green-600 hover:bg-green-50 font-medium"
                   disabled={mutation.isPending}
                   onClick={() => form.handleSubmit((v) => submitForm(v, true))()}
                 >
@@ -1201,13 +1202,12 @@ function PartyDialog({ party, open, onOpenChange, trigger }: PartyDialogProps) {
               )}
               <Button
                 type="submit"
-                className="rounded-full px-8 bg-blue-600 hover:bg-blue-700 font-medium"
+                className="rounded-full px-8 bg-green-600 hover:bg-green-700 font-medium text-white"
                 disabled={mutation.isPending}
               >
                 {mutation.isPending ? "Saving…" : "Save"}
               </Button>
             </DialogFooter>
-
           </form>
         </Form>
       </DialogContent>
@@ -1219,10 +1219,12 @@ export default function PartiesPage() {
   const qc = useQueryClient();
   const [editingParty, setEditingParty] = useState<Party | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState<"all" | "customer" | "supplier">("all");
 
   const { data: parties, isLoading, error } = useQuery({
     queryKey: ["parties"],
-    queryFn: () => api.get<Party[]>("/api/parties"),
+    queryFn: () => api.get<(Party & { balance?: number })[]>("/api/parties"),
   });
 
   const remove = useMutation({
@@ -1234,7 +1236,39 @@ export default function PartiesPage() {
     onError: () => toast.error("Could not delete party"),
   });
 
-  const columns: Column<Party>[] = [
+  // Calculate statistics
+  const partiesList = parties ?? [];
+  const totalCustomers = partiesList.filter((p) => p.type === "customer" || p.type === "both").length;
+  const totalSuppliers = partiesList.filter((p) => p.type === "supplier" || p.type === "both").length;
+
+  let totalReceivables = 0;
+  let totalPayables = 0;
+  partiesList.forEach((p) => {
+    const bal = p.balance ?? 0;
+    if (bal > 0) {
+      totalReceivables += bal;
+    } else if (bal < 0) {
+      totalPayables += Math.abs(bal);
+    }
+  });
+
+  // Filter parties list
+  const filteredRows = partiesList.filter((p) => {
+    if (selectedType === "customer" && p.type !== "customer" && p.type !== "both") return false;
+    if (selectedType === "supplier" && p.type !== "supplier" && p.type !== "both") return false;
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const nameMatch = p.name.toLowerCase().includes(query);
+      const phoneMatch = p.phone?.toLowerCase().includes(query) ?? false;
+      const gstinMatch = p.gstin?.toLowerCase().includes(query) ?? false;
+      return nameMatch || phoneMatch || gstinMatch;
+    }
+
+    return true;
+  });
+
+  const columns: Column<Party & { balance?: number }>[] = [
     {
       key: "name",
       header: "Name",
@@ -1242,12 +1276,12 @@ export default function PartiesPage() {
         <div className="min-w-0">
           <Link
             href={`/parties/${p.id}`}
-            className="font-medium text-gray-900 hover:text-green-700 hover:underline"
+            className="font-semibold text-zinc-900 hover:text-green-700 hover:underline"
           >
             {p.name}
           </Link>
           {(p.phone || p.gstin) && (
-            <div className="mt-0.5 flex items-center gap-1.5 text-xs text-gray-500">
+            <div className="mt-0.5 flex items-center gap-1.5 text-xs text-zinc-500">
               {p.phone && (
                 <span className="inline-flex items-center gap-1">
                   <Phone className="h-3 w-3" />
@@ -1265,7 +1299,7 @@ export default function PartiesPage() {
       key: "type",
       header: "Type",
       cell: (p) => (
-        <Badge variant="secondary" className="capitalize">
+        <Badge variant="secondary" className="capitalize px-2 py-0.5 font-medium border border-zinc-200 bg-zinc-50 text-zinc-600">
           {p.type}
         </Badge>
       ),
@@ -1273,18 +1307,18 @@ export default function PartiesPage() {
     {
       key: "group",
       header: "Group",
-      cell: (p) => <span className="text-sm text-gray-600">{p.groupName || "—"}</span>,
+      cell: (p) => <span className="text-xs font-medium text-zinc-600">{p.groupName || "—"}</span>,
     },
     {
       key: "status",
       header: "Status",
       cell: (p) =>
         p.status === "inactive" ? (
-          <Badge variant="outline" className="text-gray-500">
+          <Badge variant="outline" className="text-zinc-500 border-zinc-250 bg-zinc-50/50">
             Inactive
           </Badge>
         ) : (
-          <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Active</Badge>
+          <Badge className="bg-green-50 text-green-700 hover:bg-green-50 border border-green-150 font-semibold">Active</Badge>
         ),
     },
     {
@@ -1292,8 +1326,8 @@ export default function PartiesPage() {
       header: "Balance",
       align: "right",
       cell: (p) => {
-        const bal = p.openingBalance ?? 0;
-        if (bal === 0) return <span className="text-sm text-gray-400">—</span>;
+        const bal = p.balance ?? 0;
+        if (bal === 0) return <span className="text-sm text-zinc-400">—</span>;
         return (
           <span
             className={`text-sm font-semibold tabular-nums ${bal > 0 ? "text-green-600" : "text-red-500"}`}
@@ -1317,9 +1351,13 @@ export default function PartiesPage() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem asChild>
-              <Link href={`/parties/${p.id}`}>View ledger</Link>
+              <Link href={`/parties/${p.id}`} className="flex items-center">
+                <BookOpen className="mr-2 h-4 w-4" />
+                View ledger
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setEditingParty(p)}>
+              <Pencil className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -1336,10 +1374,17 @@ export default function PartiesPage() {
   ];
 
   return (
-    <main className="mx-auto max-w-[1600px] px-6 py-10">
+    <main className="mx-auto max-w-[1600px] px-6 py-8">
+      {/* Breadcrumb Header */}
+      <div className="mb-6">
+        <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-800 transition">
+          <ArrowLeft className="h-3 w-3" /> Back to Dashboard
+        </Link>
+      </div>
+
       <PageHeader
-        title="Parties"
-        description={`${parties?.length ?? 0} customers & suppliers`}
+        title="Parties Workspace"
+        description="Manage customers, suppliers, credit configurations, and account balances."
         backHref="/"
         backLabel="Dashboard"
       >
@@ -1347,7 +1392,7 @@ export default function PartiesPage() {
           open={isAddOpen}
           onOpenChange={setIsAddOpen}
           trigger={
-            <Button className="gap-1.5">
+            <Button className="gap-1.5 bg-green-600 hover:bg-green-700 text-white rounded">
               <Plus className="h-4 w-4" />
               Add Party
             </Button>
@@ -1355,13 +1400,111 @@ export default function PartiesPage() {
         />
       </PageHeader>
 
+      {/* Stats Cards Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-6">
+        <Card className="border border-zinc-200/80 shadow-xs rounded-xl bg-white p-5 flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Total Customers</div>
+            <div className="text-xl font-bold text-zinc-900 mt-1">{totalCustomers}</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Customer accounts</div>
+          </div>
+          <div className="h-10 w-10 rounded-full bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-400 shrink-0">
+            <Users className="h-5 w-5" />
+          </div>
+        </Card>
+
+        <Card className="border border-zinc-200/80 shadow-xs rounded-xl bg-white p-5 flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Total Suppliers</div>
+            <div className="text-xl font-bold text-zinc-900 mt-1">{totalSuppliers}</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Supplier accounts</div>
+          </div>
+          <div className="h-10 w-10 rounded-full bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-400 shrink-0">
+            <CheckCircle className="h-5 w-5" />
+          </div>
+        </Card>
+
+        <Card className="border border-zinc-200/80 shadow-xs rounded-xl bg-white p-5 flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">To Collect (Receivables)</div>
+            <div className="text-xl font-bold text-green-600 mt-1">{formatINR(totalReceivables)}</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Pending collections</div>
+          </div>
+          <div className="h-10 w-10 rounded-full bg-green-50 border border-green-100/50 flex items-center justify-center text-green-500 shrink-0">
+            <ArrowUpRight className="h-5 w-5" />
+          </div>
+        </Card>
+
+        <Card className="border border-zinc-200/80 shadow-xs rounded-xl bg-white p-5 flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">To Pay (Payables)</div>
+            <div className="text-xl font-bold text-red-500 mt-1">{formatINR(totalPayables)}</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Pending payments</div>
+          </div>
+          <div className="h-10 w-10 rounded-full bg-red-50 border border-red-100/50 flex items-center justify-center text-red-500 shrink-0">
+            <ArrowDownLeft className="h-5 w-5" />
+          </div>
+        </Card>
+      </div>
+
+      {/* Table Filters & Search */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 mt-6">
+        {/* Filters */}
+        <div className="flex border border-zinc-200 rounded-lg p-0.5 bg-zinc-50/50 shrink-0 self-start">
+          <button
+            onClick={() => setSelectedType("all")}
+            className={cn(
+              "px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
+              selectedType === "all"
+                ? "bg-white text-zinc-900 shadow-xs border border-zinc-200/50"
+                : "text-zinc-500 hover:text-zinc-900"
+            )}
+          >
+            All Parties
+          </button>
+          <button
+            onClick={() => setSelectedType("customer")}
+            className={cn(
+              "px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
+              selectedType === "customer"
+                ? "bg-white text-zinc-900 shadow-xs border border-zinc-200/50"
+                : "text-zinc-500 hover:text-zinc-900"
+            )}
+          >
+            Customers
+          </button>
+          <button
+            onClick={() => setSelectedType("supplier")}
+            className={cn(
+              "px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
+              selectedType === "supplier"
+                ? "bg-white text-zinc-900 shadow-xs border border-zinc-200/50"
+                : "text-zinc-500 hover:text-zinc-900"
+            )}
+          >
+            Suppliers
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+          <Input
+            placeholder="Search by name, phone, gstin..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-8 h-9 text-xs border-zinc-200 rounded-lg placeholder-zinc-400 focus-visible:ring-zinc-200"
+          />
+        </div>
+      </div>
+
       <DataTable
         columns={columns}
-        rows={parties}
+        rows={filteredRows}
         getRowKey={(p) => p.id}
         isLoading={isLoading}
         error={error}
-        emptyMessage="No parties yet. Add your first customer to get started."
+        emptyMessage="No parties match your selection. Add a party to get started."
       />
 
       {/* Controlled edit dialog */}

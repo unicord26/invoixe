@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, MoreHorizontal, Trash2 } from "lucide-react";
+import { Plus, MoreHorizontal, Trash2, ArrowUpRight, Check, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { formatINR } from "@invoixe/core";
 import type { ChequeStatus } from "@invoixe/types";
@@ -145,12 +145,28 @@ export default function ChequesPage() {
             <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Actions"><MoreHorizontal className="h-4 w-4" /></Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {c.status !== "deposited" && <DropdownMenuItem onClick={() => setStatus.mutate({ id: c.id, status: "deposited" })}>Mark deposited</DropdownMenuItem>}
-            {c.status !== "cleared" && <DropdownMenuItem onClick={() => setStatus.mutate({ id: c.id, status: "cleared" })}>Mark cleared</DropdownMenuItem>}
-            {c.status !== "bounced" && <DropdownMenuItem onClick={() => setStatus.mutate({ id: c.id, status: "bounced" })}>Mark bounced</DropdownMenuItem>}
+            {c.status !== "deposited" && (
+              <DropdownMenuItem onClick={() => setStatus.mutate({ id: c.id, status: "deposited" })}>
+                <ArrowUpRight className="mr-2 h-4 w-4" />
+                Mark deposited
+              </DropdownMenuItem>
+            )}
+            {c.status !== "cleared" && (
+              <DropdownMenuItem onClick={() => setStatus.mutate({ id: c.id, status: "cleared" })}>
+                <Check className="mr-2 h-4 w-4" />
+                Mark cleared
+              </DropdownMenuItem>
+            )}
+            {c.status !== "bounced" && (
+              <DropdownMenuItem onClick={() => setStatus.mutate({ id: c.id, status: "bounced" })}>
+                <AlertTriangle className="mr-2 h-4 w-4" />
+                Mark bounced
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => remove.mutate(c.id)}>
-              <Trash2 className="mr-2 h-4 w-4" />Delete
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

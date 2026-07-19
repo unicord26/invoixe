@@ -1,9 +1,10 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
-import { Plus, MoreHorizontal, Trash2, SlidersHorizontal, Package } from "lucide-react";
+import { MoreHorizontal, Trash2, SlidersHorizontal, Package } from "lucide-react";
 import { toast } from "sonner";
 import { formatINR } from "@invoixe/core";
 import { type Item } from "@invoixe/types";
@@ -212,8 +213,11 @@ function ItemActions({ item, onDelete }: { item: ItemWithStock; onDelete: () => 
   );
 }
 
-export default function ItemsPage() {
+function ItemsList() {
   const qc = useQueryClient();
+  const searchParams = useSearchParams();
+  const rawOnly = searchParams.get("category") === "raw";
+
   const { data: items, isLoading, error } = useQuery({
     queryKey: ["items"],
     queryFn: () => api.get<ItemWithStock[]>("/api/items"),
@@ -244,9 +248,24 @@ export default function ItemsPage() {
           </div>
           <div className="min-w-0">
             <div className="font-medium text-gray-900">{it.name}</div>
-            <div className="text-xs capitalize text-gray-400">
-              {it.type} · {it.unit}
-              {it.itemCode && <span className="ml-1 text-gray-400">· {it.itemCode}</span>}
+            <div className="text-xs capitalize text-gray-400 flex flex-wrap items-center gap-1.5">
+              <span>{it.type}</span>
+              <span>·</span>
+              <span>{it.unit}</span>
+              {it.itemCode && (
+                <>
+                  <span>·</span>
+                  <span>{it.itemCode}</span>
+                </>
+              )}
+              {it.categoryName && (
+                <>
+                  <span>·</span>
+                  <span className="rounded bg-blue-50 px-1 py-0.5 text-[10px] font-semibold text-blue-600 dark:bg-blue-950/20 dark:text-blue-400">
+                    {it.categoryName}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -298,30 +317,44 @@ export default function ItemsPage() {
     },
   ];
 
+  const filteredRows = items
+    ? items.filter((row) => {
+        if (rawOnly) {
+          return row.categoryName?.toLowerCase() === "raw material";
+        }
+        return true;
+      })
+    : [];
+
   return (
     <main className="mx-auto max-w-[1600px] px-6 py-10">
       <PageHeader
-        title="Items"
-        description={`${items?.length ?? 0} products & services`}
+        title={rawOnly ? "Raw Items" : "Product List"}
+        description={`${filteredRows?.length ?? 0} ${rawOnly ? "raw materials" : "products & services"}`}
         backHref="/"
         backLabel="Dashboard"
-      >
-        <Link href="/items/new">
-          <Button className="gap-1.5">
-            <Plus className="h-4 w-4" />
-            Add Item
-          </Button>
-        </Link>
-      </PageHeader>
+      />
 
       <DataTable
         columns={columns}
-        rows={items}
+        rows={filteredRows}
         getRowKey={(it) => it.id}
         isLoading={isLoading}
         error={error}
-        emptyMessage="No items yet. Add your first product to get started."
+        emptyMessage={
+          rawOnly
+            ? "No raw materials found. Add an item and select the 'Raw Material' category to see it here."
+            : "No items yet. Add your first product to get started."
+        }
       />
     </main>
+  );
+}
+
+export default function ItemsPage() {
+  return (
+    <Suspense fallback={null}>
+      <ItemsList />
+    </Suspense>
   );
 }

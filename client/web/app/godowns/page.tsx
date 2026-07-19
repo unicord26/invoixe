@@ -1,177 +1,53 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, ArrowRight, Warehouse } from "lucide-react";
-import { toast } from "sonner";
-import type { Item } from "@invoixe/types";
-import { api } from "../../lib/api";
-import { PageHeader } from "../../components/page-header";
-import { Combobox, type ComboOption } from "../../components/combobox";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Lock, Warehouse, ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-type Godown = { id: string; name: string };
-type GodownStock = { godownId: string; itemId: string; qty: number };
-
-function AddGodownDialog() {
-  const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const create = useMutation({
-    mutationFn: () => api.post("/api/godowns", { name: name.trim() }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["godowns"] }); toast.success("Godown added"); setName(""); setOpen(false); },
-    onError: () => toast.error("Could not add godown"),
-  });
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button variant="outline" className="gap-1.5"><Plus className="h-4 w-4" />Add Godown</Button></DialogTrigger>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader><DialogTitle>Add a godown</DialogTitle></DialogHeader>
-        <div className="space-y-2">
-          <Label htmlFor="gname">Name</Label>
-          <Input id="gname" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Main Warehouse" autoFocus />
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={() => name.trim() && create.mutate()} disabled={!name.trim() || create.isPending}>
-            {create.isPending ? "Saving…" : "Add"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function TransferCard({ godowns, items }: { godowns: Godown[]; items: Item[] }) {
-  const qc = useQueryClient();
-  const [itemId, setItemId] = useState("");
-  const [fromId, setFromId] = useState("");
-  const [toId, setToId] = useState("");
-  const [qty, setQty] = useState("");
-
-  const itemOptions: ComboOption[] = items.map((it) => ({ value: it.id, label: it.name }));
-  const n = Number(qty);
-  const valid = itemId && fromId && toId && fromId !== toId && Number.isFinite(n) && n > 0;
-
-  const transfer = useMutation({
-    mutationFn: () => api.post("/api/godowns/transfer", { itemId, fromGodownId: fromId, toGodownId: toId, qty: n }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["godown-stock"] });
-      qc.invalidateQueries({ queryKey: ["godown-transfers"] });
-      toast.success("Stock transferred");
-      setQty("");
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Transfer failed"),
-  });
-
-  if (godowns.length < 2) {
-    return (
-      <Card><CardContent className="p-5 text-sm text-gray-500">Add at least two godowns to transfer stock between them.</CardContent></Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardContent className="grid gap-3 p-5 md:grid-cols-[1fr_auto_1fr_auto_auto] md:items-end">
-        <div>
-          <Label className="mb-1.5 block text-xs font-medium text-gray-600">Item</Label>
-          <Combobox options={itemOptions} value={itemId} onChange={setItemId} placeholder="Pick item…" searchPlaceholder="Search…" emptyText="No items." />
-        </div>
-        <div>
-          <Label className="mb-1.5 block text-xs font-medium text-gray-600">From</Label>
-          <Select value={fromId} onValueChange={setFromId}>
-            <SelectTrigger className="w-36"><SelectValue placeholder="Source" /></SelectTrigger>
-            <SelectContent>{godowns.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-        <div className="hidden pb-2 md:block"><ArrowRight className="h-4 w-4 text-gray-400" /></div>
-        <div>
-          <Label className="mb-1.5 block text-xs font-medium text-gray-600">To</Label>
-          <Select value={toId} onValueChange={setToId}>
-            <SelectTrigger className="w-36"><SelectValue placeholder="Destination" /></SelectTrigger>
-            <SelectContent>{godowns.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-end gap-2">
-          <div>
-            <Label className="mb-1.5 block text-xs font-medium text-gray-600">Qty</Label>
-            <Input type="number" step="any" min="0" value={qty} onChange={(e) => setQty(e.target.value)} className="w-24" placeholder="0" />
-          </div>
-          <Button onClick={() => valid && transfer.mutate()} disabled={!valid || transfer.isPending}>
-            {transfer.isPending ? "…" : "Transfer"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+import { Button } from "@/components/ui/button";
 
 export default function GodownsPage() {
-  const { data: godowns } = useQuery({ queryKey: ["godowns"], queryFn: () => api.get<Godown[]>("/api/godowns") });
-  const { data: items } = useQuery({ queryKey: ["items"], queryFn: () => api.get<Item[]>("/api/items") });
-  const { data: stock } = useQuery({ queryKey: ["godown-stock"], queryFn: () => api.get<GodownStock[]>("/api/godowns/stock") });
-
-  const itemName = useMemo(() => {
-    const m = new Map((items ?? []).map((i) => [i.id, i.name]));
-    return (id: string) => m.get(id) ?? "—";
-  }, [items]);
-
-  // Group per-godown stock rows for display.
-  const byGodown = useMemo(() => {
-    const m = new Map<string, GodownStock[]>();
-    for (const r of stock ?? []) {
-      if (!r.godownId) continue;
-      const arr = m.get(r.godownId) ?? [];
-      if (r.qty !== 0) arr.push(r);
-      m.set(r.godownId, arr);
-    }
-    return m;
-  }, [stock]);
-
   return (
-    <main className="mx-auto max-w-[1600px] px-6 py-10">
-      <PageHeader title="Godowns" description={`${godowns?.length ?? 0} warehouses`} backHref="/" backLabel="Dashboard">
-        <AddGodownDialog />
-      </PageHeader>
-
-      <div className="mb-6">
-        <TransferCard godowns={godowns ?? []} items={items ?? []} />
+    <main className="mx-auto max-w-lg px-6 py-20 flex flex-col items-center justify-center min-h-[80vh] text-center">
+      <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-zinc-50 border border-zinc-100 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+        <Warehouse className="h-10 w-10 text-zinc-400 dark:text-zinc-500" />
+        <span className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-xl bg-amber-500 text-white shadow-md border-2 border-white dark:border-zinc-950">
+          <Lock className="h-3.5 w-3.5" />
+        </span>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {(godowns ?? []).map((g) => {
-          const rows = byGodown.get(g.id) ?? [];
-          return (
-            <Card key={g.id}>
-              <CardContent className="p-5">
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-50 text-green-600"><Warehouse className="h-4 w-4" /></span>
-                  <h3 className="font-bold text-gray-900">{g.name}</h3>
-                </div>
-                {rows.length === 0 ? (
-                  <p className="text-xs text-gray-400">No stock moved here yet.</p>
-                ) : (
-                  <ul className="space-y-1">
-                    {rows.map((r) => (
-                      <li key={r.itemId} className="flex justify-between text-sm">
-                        <span className="text-gray-600">{itemName(r.itemId)}</span>
-                        <span className="tabular-nums font-medium text-gray-900">{r.qty}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+        Godowns &amp; Warehousing
+      </h1>
+      <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400 max-w-sm">
+        Track stock movements across multiple storage godowns, manage stock transfers, and check inventory levels per warehouse.
+      </p>
+
+      <Card className="mt-8 border border-zinc-100 bg-white/70 shadow-xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/70 max-w-sm w-full">
+        <CardContent className="p-6 space-y-4">
+          <div className="rounded-2xl bg-amber-50 border border-amber-100/50 p-4 dark:bg-amber-950/10 dark:border-amber-900/30 flex items-start gap-3 text-left">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-amber-500 text-white text-[10px] font-bold">
+              !
+            </span>
+            <div className="space-y-1">
+              <h4 className="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider">
+                Coming Soon
+              </h4>
+              <p className="text-xs text-amber-700/85 dark:text-amber-500/90 leading-relaxed">
+                This feature is locked for this workspace version. Multi-warehouse tracking is planned in the next system updates.
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <Link href="/">
+              <Button className="w-full gap-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </main>
   );
 }
