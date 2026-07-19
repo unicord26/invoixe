@@ -7,6 +7,7 @@ import { BusinessModule } from "./business/business.controller";
 import { BusinessesModule } from "./businesses/businesses.controller";
 import { BackupModule } from "./backup/backup.controller";
 import { PartiesModule } from "./parties/parties.controller";
+import { EmployeesModule } from "./employees/employees.controller";
 import { ItemsModule } from "./items/items.controller";
 import { InvoicesModule } from "./invoices/invoices.controller";
 import { PaymentsModule } from "./payments/payments.controller";
@@ -35,6 +36,7 @@ import { ManufacturingModule } from "./manufacturing/manufacturing.controller";
     BusinessesModule,
     BackupModule,
     PartiesModule,
+    EmployeesModule,
     ItemsModule,
     InvoicesModule,
     PaymentsModule,

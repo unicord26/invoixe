@@ -60,6 +60,7 @@ model Business {
   categories   ItemCategory[]
   transactions Transaction[]
   numberSeries NumberSeries[]
+  employees    Employee[]
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   deletedAt    DateTime?
@@ -121,6 +122,31 @@ model Party {
 
   @@index([businessId])
   @@index([businessId, name])
+}
+
+// ------------------------------------------------------------------
+// Employees (staff members & payroll details)
+// ------------------------------------------------------------------
+
+model Employee {
+  id          String    @id @default(uuid())
+  businessId  String
+  name        String
+  phone       String?
+  email       String?
+  role        String?
+  salary      Int?      // paise; monthly salary
+  status      String    @default("active") // active | inactive
+  joiningDate String?   // YYYY-MM-DD
+  leavingDate String?   // YYYY-MM-DD
+  notes       String?
+  address     String?
+  business    Business  @relation(fields: [businessId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([businessId])
 }
 
 // ------------------------------------------------------------------

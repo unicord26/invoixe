@@ -177,6 +177,11 @@ export const itemSchema = z.object({
   name: z.string().min(1),
   type: itemTypeSchema.default("product"),
   categoryId: z.string().uuid().optional().nullable(),
+  categoryName: z.string().optional().nullable(),
+  category: z.object({
+    id: z.string(),
+    name: z.string(),
+  }).optional().nullable(),
   hsnSac: z.string().optional().nullable(),
   unit: z.string().default("PCS"),
   /** Prices in paise. */
@@ -568,3 +573,24 @@ export const createDocumentSchema = z.object({
   lines: z.array(invoiceLineInputSchema).min(1, "Add at least one line item"),
 });
 export type CreateDocument = z.infer<typeof createDocumentSchema>;
+
+/* ---------------- Employee ---------------- */
+
+export const employeeSchema = z.object({
+  id: z.string().uuid(),
+  businessId: z.string().uuid(),
+  name: z.string().min(1, "Name is required"),
+  phone: z.string().optional().nullable(),
+  email: z.string().email().or(z.literal("")).optional().nullable(),
+  role: z.string().optional().nullable(),
+  salary: z.number().int().nonnegative().optional().nullable(),
+  status: z.enum(["active", "inactive"]).default("active"),
+  joiningDate: z.string().optional().nullable(),
+  leavingDate: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+});
+export type Employee = z.infer<typeof employeeSchema>;
+
+export const createEmployeeSchema = employeeSchema.omit({ id: true });
+export type CreateEmployee = z.infer<typeof createEmployeeSchema>;
