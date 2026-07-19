@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useState, type ReactNode, Suspense, useRef } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import gsap from "gsap";
 import { Menu, Settings, LogOut, ChevronDown } from "lucide-react";
 import { NAV, isGroup, isActiveHref, type NavLeaf, type NavGroup } from "../lib/nav";
-import { FirmSwitcher } from "../app/firm-switcher";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+
 // ── Leaf link ────────────────────────────────────────────────────────────────
 function NavLink({
   item,
@@ -21,7 +22,7 @@ function NavLink({
 }) {
   if (item.soon) {
     return (
-      <div className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 cursor-not-allowed select-none">
+      <div className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm text-zinc-500 cursor-not-allowed select-none">
         <span className="flex items-center gap-3">
           {item.icon ? (
             <item.icon className="w-[18px] h-[18px] shrink-0" />
@@ -30,7 +31,7 @@ function NavLink({
           )}
           {item.label}
         </span>
-        <span className="text-[9px] uppercase font-bold tracking-wide bg-[#1a3322] text-gray-400 px-1.5 py-0.5 rounded">
+        <span className="text-[9px] uppercase font-bold tracking-wide bg-[#112419] text-zinc-500 px-1.5 py-0.5 rounded border border-[#1b432c]/30">
           Soon
         </span>
       </div>
@@ -41,10 +42,10 @@ function NavLink({
       href={item.href}
       onClick={onNavigate}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors border border-transparent",
         active
-          ? "bg-[#15311f] text-white shadow-sm"
-          : "text-gray-400 hover:text-white hover:bg-[#112419]"
+          ? "bg-[#133020] text-zinc-100 shadow-sm border-[#1b432c]/50"
+          : "text-zinc-400 hover:text-white hover:bg-white/5"
       )}
     >
       {item.icon ? (
@@ -61,46 +62,110 @@ function NavLink({
 function NavGroupItem({
   group,
   pathname,
+  category,
   onNavigate,
 }: {
   group: NavGroup;
   pathname: string;
+  category: string | null;
   onNavigate?: () => void;
 }) {
-  const hasActive = group.items.some((i) => !i.soon && isActiveHref(pathname, i.href));
+  const hasActive = group.items.some((i) => !i.soon && isActiveHref(pathname, i.href, category));
   const [open, setOpen] = useState(hasActive);
   const Icon = group.icon;
+  const contentRef = useRef<HTMLDivElement>(null);
+  const isInitial = useRef(true);
 
   // Auto-open when one of its children becomes the active route.
   useEffect(() => {
     if (hasActive) setOpen(true);
   }, [hasActive]);
 
+  useEffect(() => {
+    if (!contentRef.current) return;
+
+    if (isInitial.current) {
+      isInitial.current = false;
+      if (open) {
+        gsap.set(contentRef.current, { height: "auto", opacity: 1, display: "block" });
+      } else {
+        gsap.set(contentRef.current, { height: 0, opacity: 0, display: "none" });
+      }
+      return;
+    }
+
+    if (open) {
+      gsap.killTweensOf(contentRef.current);
+      gsap.fromTo(contentRef.current,
+        { height: 0, opacity: 0, display: "block" },
+        { height: "auto", opacity: 1, duration: 0.25, ease: "power2.out" }
+      );
+    } else {
+      gsap.killTweensOf(contentRef.current);
+      gsap.to(contentRef.current,
+        { height: 0, opacity: 0, display: "none", duration: 0.2, ease: "power2.in" }
+      );
+    }
+  }, [open]);
+
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger
         className={cn(
           "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-          hasActive ? "text-white" : "text-gray-400 hover:text-white hover:bg-[#112419]"
+          hasActive ? "text-white" : "text-zinc-400 hover:text-white hover:bg-white/5"
         )}
       >
         <Icon className="w-[18px] h-[18px] shrink-0" />
         <span className="flex-1 text-left">{group.label}</span>
         <ChevronDown className={cn("w-4 h-4 opacity-70 transition-transform", open && "rotate-180")} />
       </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div className="mt-1 ml-4 pl-3 border-l border-[#1a3322] space-y-1">
+      <CollapsibleContent forceMount>
+        <div ref={contentRef} className="mt-1 ml-4 pl-3 border-l border-[#112419] space-y-1 overflow-hidden">
           {group.items.map((i) => (
             <NavLink
               key={i.label}
               item={i}
-              active={!i.soon && isActiveHref(pathname, i.href)}
+              active={!i.soon && isActiveHref(pathname, i.href, category)}
               onNavigate={onNavigate}
             />
           ))}
         </div>
       </CollapsibleContent>
     </Collapsible>
+  );
+}
+
+function NavLinksList({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+  const searchParams = useSearchParams();
+  const category = searchParams.get("category");
+
+  return (
+    <div className="space-y-6">
+      {NAV.map((section, sIdx) => (
+        <div key={sIdx} className="space-y-1.5">
+          {section.category && (
+            <h3 className="px-3 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              {section.category}
+            </h3>
+          )}
+          <div className="space-y-1">
+            {section.items.map((entry) =>
+              isGroup(entry) ? (
+                <NavGroupItem key={entry.label} group={entry} pathname={pathname} category={category} onNavigate={onNavigate} />
+              ) : (
+                <NavLink
+                  key={entry.label}
+                  item={entry}
+                  active={isActiveHref(pathname, entry.href, category)}
+                  onNavigate={onNavigate}
+                />
+              )
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -117,9 +182,9 @@ function SidebarContent({
   onNavigate?: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-[#0a160f]">
       {/* Branding */}
-      <div className="p-5 border-b border-[#1a3322]">
+      <div className="p-5 border-b border-[#112419]">
         <Link href="/" onClick={onNavigate} className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-white/5 border border-white/10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -132,32 +197,15 @@ function SidebarContent({
         </Link>
       </div>
 
-      {/* Active firm */}
-      <div className="p-4 border-b border-[#1a3322] bg-[#09140e]/50">
-        <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
-          Active Firm
-        </label>
-        <FirmSwitcher />
-      </div>
-
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-        {NAV.map((entry) =>
-          isGroup(entry) ? (
-            <NavGroupItem key={entry.label} group={entry} pathname={pathname} onNavigate={onNavigate} />
-          ) : (
-            <NavLink
-              key={entry.label}
-              item={entry}
-              active={isActiveHref(pathname, entry.href)}
-              onNavigate={onNavigate}
-            />
-          )
-        )}
+        <Suspense fallback={null}>
+          <NavLinksList pathname={pathname} onNavigate={onNavigate} />
+        </Suspense>
       </nav>
 
       {/* Footer: user + settings + sign out */}
-      <div className="p-4 border-t border-[#1a3322] bg-[#09140e]/50">
+      <div className="p-4 border-t border-[#112419] bg-[#0a160f]/50">
         <div className="mb-3 min-w-0">
           <p className="text-xs font-semibold text-white truncate" title={email ?? ""}>
             {email?.split("@")[0] || "User"}
@@ -173,8 +221,8 @@ function SidebarContent({
             className={cn(
               "flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition",
               pathname === "/settings"
-                ? "bg-[#0b2e27] border-green-600 text-white"
-                : "border-gray-600 hover:border-gray-500 text-gray-300"
+                ? "bg-[#133020] border-[#1b432c] text-white"
+                : "border-[#1a3322] hover:border-[#22442d] text-zinc-300"
             )}
           >
             <Settings className="w-4 h-4" />
@@ -182,7 +230,7 @@ function SidebarContent({
           </Link>
           <button
             onClick={onSignOut}
-            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border border-red-900/50 hover:border-red-600/70 text-red-400 transition"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border border-red-950/50 hover:border-red-900/70 text-red-400 transition"
           >
             <LogOut className="w-4 h-4" />
             Sign out
@@ -218,16 +266,16 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-[#f8faf9] lg:grid lg:grid-cols-[260px_1fr]">
       {/* Mobile top bar */}
-      <header className="flex items-center gap-3 px-4 py-3 bg-[#0d1c13] text-white lg:hidden border-b border-[#1e3424] sticky top-0 z-20">
+      <header className="flex items-center gap-3 px-4 py-3 bg-[#0a160f] text-white lg:hidden border-b border-[#112419] sticky top-0 z-20">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
-            <button className="p-1 rounded-md hover:bg-[#1a3322]" aria-label="Open navigation menu">
+            <button className="p-1 rounded-md hover:bg-white/5" aria-label="Open navigation menu">
               <Menu className="w-6 h-6" />
             </button>
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="w-[280px] p-0 bg-[#0d1c13] border-[#1a3322] text-gray-300 [&>button]:text-gray-400 [&>button]:hover:text-white"
+            className="w-[280px] p-0 bg-[#0a160f] border-[#112419] text-zinc-300 [&>button]:text-zinc-400 [&>button]:hover:text-white"
           >
             <SheetTitle className="sr-only">Navigation</SheetTitle>
             <SidebarContent
@@ -246,7 +294,7 @@ export function AppShell({
       </header>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:h-screen lg:sticky lg:top-0 bg-[#0d1c13] border-r border-[#1a3322] text-gray-300">
+      <aside className="hidden lg:flex lg:flex-col lg:h-screen lg:sticky lg:top-0 bg-[#0a160f] border-r border-[#112419] text-zinc-300">
         <SidebarContent email={email} onSignOut={onSignOut} pathname={pathname} />
       </aside>
 

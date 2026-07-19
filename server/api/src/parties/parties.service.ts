@@ -17,11 +17,25 @@ export type PartyPatch = z.infer<typeof partyPatchSchema>;
 export class PartiesService {
   constructor(private readonly prisma: PrismaClient) {}
 
-  list(businessId: string) {
-    return this.prisma.party.findMany({
+  async list(businessId: string) {
+    const parties = await this.prisma.party.findMany({
       where: { businessId, deletedAt: null },
       orderBy: { name: "asc" },
     });
+    const grouped = await this.prisma.transaction.groupBy({
+      by: ["partyId", "type"],
+      where: { businessId, deletedAt: null, partyId: { not: null } },
+      _sum: { grandTotal: true },
+    });
+    const balanceMap: Record<string, number> = {};
+    for (const g of grouped) {
+      if (!g.partyId) continue;
+      balanceMap[g.partyId] = (balanceMap[g.partyId] ?? 0) + signedBalanceDelta(g.type, g._sum.grandTotal ?? 0);
+    }
+    return parties.map((p) => ({
+      ...p,
+      balance: p.openingBalance + (balanceMap[p.id] ?? 0),
+    }));
   }
 
   /** Running balance + outstanding for one party. */

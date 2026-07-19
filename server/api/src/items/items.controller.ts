@@ -38,25 +38,99 @@ export class ItemsService {
   async list(user: AuthUser) {
     const businessId = await getUserBusinessId(user);
     const [items, stock] = await Promise.all([
-      this.prisma.item.findMany({ where: { businessId, deletedAt: null }, orderBy: { name: "asc" } }),
+      this.prisma.item.findMany({
+        where: { businessId, deletedAt: null },
+        include: { category: true },
+        orderBy: { name: "asc" }
+      }),
       getStockMap(businessId),
     ]);
-    return items.map((it) => ({ ...it, currentStock: stock[it.id] ?? it.openingStock }));
+    return items.map((it) => ({
+      ...it,
+      currentStock: stock[it.id] ?? it.openingStock,
+      categoryName: it.category?.name ?? null,
+    }));
   }
 
   async create(user: AuthUser, data: ItemBody) {
     const businessId = await getUserBusinessId(user);
-    return this.prisma.item.create({ data: { ...data, businessId } });
+    const { categoryName, category, ...rest } = data as any;
+
+    let categoryId = rest.categoryId;
+    if (categoryName) {
+      const cleanName = categoryName.trim();
+      let cat = await this.prisma.itemCategory.findFirst({
+        where: { businessId, name: cleanName, deletedAt: null }
+      });
+      if (!cat) {
+        cat = await this.prisma.itemCategory.create({
+          data: { businessId, name: cleanName }
+        });
+      }
+      categoryId = cat.id;
+    }
+
+    const item = await this.prisma.item.create({
+      data: {
+        ...rest,
+        categoryId,
+        businessId
+      },
+      include: {
+        category: true
+      }
+    });
+
+    return {
+      ...item,
+      categoryName: item.category?.name ?? null,
+    };
   }
 
   async update(user: AuthUser, id: string, data: ItemPatch) {
     const businessId = await getUserBusinessId(user);
-    const { count } = await this.prisma.item.updateMany({
-      where: { id, businessId, deletedAt: null },
-      data,
+    const { categoryName, category, ...rest } = data as any;
+
+    let categoryId = rest.categoryId;
+    if (categoryName !== undefined) {
+      if (categoryName === null) {
+        categoryId = null;
+      } else {
+        const cleanName = categoryName.trim();
+        let cat = await this.prisma.itemCategory.findFirst({
+          where: { businessId, name: cleanName, deletedAt: null }
+        });
+        if (!cat) {
+          cat = await this.prisma.itemCategory.create({
+            data: { businessId, name: cleanName }
+          });
+        }
+        categoryId = cat.id;
+      }
+    }
+
+    const finalData = {
+      ...rest,
+      ...(categoryId !== undefined ? { categoryId } : {})
+    };
+
+    const existing = await this.prisma.item.findFirst({
+      where: { id, businessId, deletedAt: null }
     });
-    if (count === 0) throw new NotFoundException({ error: "not_found" });
-    return this.prisma.item.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException({ error: "not_found" });
+
+    const updated = await this.prisma.item.update({
+      where: { id },
+      data: finalData,
+      include: {
+        category: true
+      }
+    });
+
+    return {
+      ...updated,
+      categoryName: updated.category?.name ?? null,
+    };
   }
 
   async remove(user: AuthUser, id: string) {
