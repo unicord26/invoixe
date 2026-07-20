@@ -129,24 +129,70 @@ model Party {
 // ------------------------------------------------------------------
 
 model Employee {
-  id          String    @id @default(uuid())
-  businessId  String
-  name        String
-  phone       String?
-  email       String?
-  role        String?
-  salary      Int?      // paise; monthly salary
-  status      String    @default("active") // active | inactive
-  joiningDate String?   // YYYY-MM-DD
-  leavingDate String?   // YYYY-MM-DD
-  notes       String?
-  address     String?
-  business    Business  @relation(fields: [businessId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
+  id                    String               @id @default(uuid())
+  businessId            String
+  code                  String?              // Staff ID / Code, e.g., EMP-001
+  name                  String
+  phone                 String?
+  email                 String?
+  role                  String?              // Designation
+  department            String?              // Sales, Accounts, Warehouse, etc.
+  salary                Int?                 // paise; monthly salary
+  status                String               @default("active") // active | inactive
+  joiningDate           String?              // YYYY-MM-DD
+  leavingDate           String?              // YYYY-MM-DD
+  notes                 String?
+  address               String?
+  panNo                 String?
+  aadhaarNo             String?
+  bankName              String?
+  accountNo             String?
+  ifscCode              String?
+  upiId                 String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  business              Business             @relation(fields: [businessId], references: [id])
+  attendances           EmployeeAttendance[]
+  payments              EmployeePayment[]
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  deletedAt             DateTime?
 
   @@index([businessId])
+}
+
+model EmployeeAttendance {
+  id         String   @id @default(uuid())
+  businessId String
+  employeeId String
+  date       String   // YYYY-MM-DD
+  status     String   // present | absent | half_day | paid_leave
+  note       String?
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([businessId, date])
+}
+
+model EmployeePayment {
+  id          String   @id @default(uuid())
+  businessId  String
+  employeeId  String
+  amount      Int      // paise
+  type        String   // salary | advance | bonus | deduction
+  paymentMode String   @default("cash") // cash | bank_transfer | upi | cheque
+  date        String   // YYYY-MM-DD
+  monthPeriod String?  // YYYY-MM (for monthly salary payout)
+  referenceNo String?
+  note        String?
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([employeeId])
 }
 
 // ------------------------------------------------------------------

@@ -579,18 +579,59 @@ export type CreateDocument = z.infer<typeof createDocumentSchema>;
 export const employeeSchema = z.object({
   id: z.string().uuid(),
   businessId: z.string().uuid(),
+  code: z.string().optional().nullable(),
   name: z.string().min(1, "Name is required"),
   phone: z.string().optional().nullable(),
   email: z.string().email().or(z.literal("")).optional().nullable(),
   role: z.string().optional().nullable(),
+  department: z.string().optional().nullable(),
   salary: z.number().int().nonnegative().optional().nullable(),
   status: z.enum(["active", "inactive"]).default("active"),
   joiningDate: z.string().optional().nullable(),
   leavingDate: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
+  panNo: z.string().optional().nullable(),
+  aadhaarNo: z.string().optional().nullable(),
+  bankName: z.string().optional().nullable(),
+  accountNo: z.string().optional().nullable(),
+  ifscCode: z.string().optional().nullable(),
+  upiId: z.string().optional().nullable(),
+  emergencyContactName: z.string().optional().nullable(),
+  emergencyContactPhone: z.string().optional().nullable(),
 });
 export type Employee = z.infer<typeof employeeSchema>;
 
 export const createEmployeeSchema = employeeSchema.omit({ id: true });
 export type CreateEmployee = z.infer<typeof createEmployeeSchema>;
+
+export const employeeAttendanceSchema = z.object({
+  id: z.string().uuid(),
+  businessId: z.string().uuid(),
+  employeeId: z.string().uuid(),
+  date: z.string(),
+  status: z.enum(["present", "absent", "half_day", "paid_leave"]),
+  note: z.string().optional().nullable(),
+});
+export type EmployeeAttendance = z.infer<typeof employeeAttendanceSchema>;
+
+export const createEmployeeAttendanceSchema = employeeAttendanceSchema.omit({ id: true, businessId: true });
+export type CreateEmployeeAttendance = z.infer<typeof createEmployeeAttendanceSchema>;
+
+export const employeePaymentSchema = z.object({
+  id: z.string().uuid(),
+  businessId: z.string().uuid(),
+  employeeId: z.string().uuid(),
+  amount: z.number().int().positive("Amount must be positive"),
+  type: z.enum(["salary", "advance", "bonus", "deduction"]),
+  paymentMode: z.enum(["cash", "bank_transfer", "upi", "cheque"]).default("cash"),
+  date: z.string(),
+  monthPeriod: z.string().optional().nullable(),
+  referenceNo: z.string().optional().nullable(),
+  note: z.string().optional().nullable(),
+});
+export type EmployeePayment = z.infer<typeof employeePaymentSchema>;
+
+export const createEmployeePaymentSchema = employeePaymentSchema.omit({ id: true, businessId: true });
+export type CreateEmployeePayment = z.infer<typeof createEmployeePaymentSchema>;
+
