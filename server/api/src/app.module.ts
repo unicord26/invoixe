@@ -49,7 +49,7 @@ import { ManufacturingModule } from "./manufacturing/manufacturing.controller";
     LoansModule,
     ReportsModule,
     GstModule,
-    ManufacturingModule, // /api/bom, /api/production, /api/godowns
+    ManufacturingModule, // /api/bom, /api/production
   ],
 })
 export class AppModule {}

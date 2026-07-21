@@ -1,15 +1,10 @@
 import {
   BadRequestException, Body, Controller, Get, HttpCode, Injectable, Module, Param, Post, Put, UseGuards,
 } from "@nestjs/common";
-import type { z } from "zod";
 import { PrismaClient } from "@invoixe/db";
-import { stockTransferSchema } from "@invoixe/types";
 import type { AuthUser } from "../lib/auth";
 import { getUserBusinessId } from "../lib/business";
 import { CurrentUser, SupabaseAuthGuard } from "../common/supabase-auth.guard";
-import { ZodValidationPipe } from "../common/zod-validation.pipe";
-
-type TransferBody = z.infer<typeof stockTransferSchema>;
 
 interface BomBody {
   lines?: unknown;
@@ -17,9 +12,6 @@ interface BomBody {
 interface ProductionBody {
   itemId?: string;
   qty?: unknown;
-}
-interface GodownBody {
-  name?: string;
 }
 
 @Injectable()
@@ -72,68 +64,9 @@ export class ManufacturingService {
     await this.prisma.stockMovement.createMany({ data: moves });
     return { ok: true, produced: qty, consumed: bom.lines.length };
   }
-
-  // ---- Godowns (warehouse master) ----
-
-  async godowns(user: AuthUser) {
-    const businessId = await getUserBusinessId(user);
-    return this.prisma.godown.findMany({ where: { businessId, deletedAt: null }, orderBy: { createdAt: "asc" } });
-  }
-
-  async createGodown(user: AuthUser, body: GodownBody) {
-    const businessId = await getUserBusinessId(user);
-    if (!body?.name?.trim()) throw new BadRequestException({ error: "name_required" });
-    return this.prisma.godown.create({ data: { businessId, name: String(body.name).trim() } });
-  }
-
-  /** Per-godown, per-item balances (from transfer movements). */
-  async godownStock(user: AuthUser) {
-    const businessId = await getUserBusinessId(user);
-    const rows = await this.prisma.stockMovement.groupBy({
-      by: ["godownId", "itemId"],
-      where: { businessId, godownId: { not: null } },
-      _sum: { qty: true },
-    });
-    return rows.map((r) => ({ godownId: r.godownId, itemId: r.itemId, qty: r._sum.qty ?? 0 }));
-  }
-
-  async transfers(user: AuthUser) {
-    const businessId = await getUserBusinessId(user);
-    return this.prisma.stockTransfer.findMany({ where: { businessId }, orderBy: { createdAt: "desc" }, take: 50 });
-  }
-
-  /** Move stock between two godowns (paired movements). */
-  async transfer(user: AuthUser, data: TransferBody) {
-    const businessId = await getUserBusinessId(user);
-    const { itemId, fromGodownId, toGodownId, qty, note } = data;
-
-    // Every referenced entity must belong to the caller's business (tenant guard).
-    const [item, from, to] = await Promise.all([
-      this.prisma.item.findFirst({ where: { id: itemId, businessId, deletedAt: null } }),
-      this.prisma.godown.findFirst({ where: { id: fromGodownId, businessId, deletedAt: null } }),
-      this.prisma.godown.findFirst({ where: { id: toGodownId, businessId, deletedAt: null } }),
-    ]);
-    if (!item) throw new BadRequestException({ error: "item_not_found" });
-    if (!from || !to) throw new BadRequestException({ error: "godown_not_found" });
-
-    return this.prisma.$transaction(async (tx) => {
-      const t = await tx.stockTransfer.create({
-        data: { businessId, itemId, fromGodownId, toGodownId, qty, note: note ?? null },
-      });
-      // Net-zero global stock: out of source, into destination.
-      await tx.stockMovement.createMany({
-        data: [
-          { businessId, itemId, qty: -qty, reason: "transfer", godownId: fromGodownId, note: note ?? null },
-          { businessId, itemId, qty: qty, reason: "transfer", godownId: toGodownId, note: note ?? null },
-        ],
-      });
-      return t;
-    });
-  }
 }
 
-// These three controllers were one Express router mounted at /api, so their paths
-// are /api/bom, /api/production and /api/godowns — not /api/manufacturing/*.
+// These two controllers are mounted at /api/bom and /api/production.
 
 @Controller("bom")
 @UseGuards(SupabaseAuthGuard)
@@ -163,41 +96,8 @@ export class ProductionController {
   }
 }
 
-@Controller("godowns")
-@UseGuards(SupabaseAuthGuard)
-export class GodownsController {
-  constructor(private readonly mfg: ManufacturingService) {}
-
-  @Get()
-  godowns(@CurrentUser() user: AuthUser) {
-    return this.mfg.godowns(user);
-  }
-
-  @Post()
-  @HttpCode(201)
-  createGodown(@CurrentUser() user: AuthUser, @Body() body: GodownBody) {
-    return this.mfg.createGodown(user, body);
-  }
-
-  @Get("stock")
-  godownStock(@CurrentUser() user: AuthUser) {
-    return this.mfg.godownStock(user);
-  }
-
-  @Get("transfers")
-  transfers(@CurrentUser() user: AuthUser) {
-    return this.mfg.transfers(user);
-  }
-
-  @Post("transfer")
-  @HttpCode(201)
-  transfer(@CurrentUser() user: AuthUser, @Body(new ZodValidationPipe(stockTransferSchema)) body: TransferBody) {
-    return this.mfg.transfer(user, body);
-  }
-}
-
 @Module({
-  controllers: [BomController, ProductionController, GodownsController],
+  controllers: [BomController, ProductionController],
   providers: [ManufacturingService],
 })
 export class ManufacturingModule {}
