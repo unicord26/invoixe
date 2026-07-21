@@ -8,7 +8,6 @@ import {
   BarChart3,
   ShieldCheck,
   Factory,
-  Warehouse,
   DatabaseBackup,
   Contact,
   type LucideIcon,
@@ -129,7 +128,14 @@ export const NAV: NavSection[] = [
           { label: "Loan Accounts", href: "/bank/loans", desc: "Loans & EMIs" },
         ],
       },
-      { label: "Reports", href: "/reports", icon: BarChart3, desc: "P&L, GST, stock" },
+      {
+        label: "Reports",
+        icon: BarChart3,
+        items: [
+          { label: "Profit & Loss Reports", href: "/reports/pnl", desc: "P&L income & expenditure" },
+          { label: "Balance & Taxes Reports", href: "/reports/bnt", desc: "GST, debtors, creditors & stock" },
+        ],
+      },
       { label: "GST Compliance", href: "/gst", icon: ShieldCheck, desc: "GSTR-1, e-invoice" },
     ],
   },
@@ -138,7 +144,6 @@ export const NAV: NavSection[] = [
     items: [
       { label: "Manufacturing", href: "/manufacturing", icon: Factory, desc: "BOM & production" },
       { label: "Backup & Import", href: "/backup", icon: DatabaseBackup, desc: "Export / restore data" },
-      { label: "Godowns", href: "/godowns", icon: Warehouse, soon: true, desc: "Warehouses & transfers" },
     ],
   },
 ];

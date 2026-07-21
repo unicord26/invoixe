@@ -1,10 +1,11 @@
 # 🍃 Invoixe — Modern GST Billing & Inventory Suite
+### *Powered by UniCord Tech*
 
 <div align="center">
   <img src="client/web/public/logo.png" alt="Invoixe Logo" width="160" height="160" style="border-radius: 50%; box-shadow: 0 10px 25px rgba(0,0,0,0.15);" />
   
   <p align="center">
-    <strong>A premium, multi-tenant GST Billing, POS, Accounting & Inventory platform for Indian SMEs.</strong>
+    <strong>A premium client product by UniCord Tech — multi-tenant GST Billing, POS, Accounting & Inventory suite for Indian SMEs.</strong>
   </p>
 
   <p align="center">
@@ -19,7 +20,7 @@
 
 ## 🚀 Welcome to Invoixe
 
-Invoixe is a comprehensive desktop-first and mobile-responsive billing platform designed to digitize Indian small and medium enterprises (SMEs). Inspired by the features of Vyapar, Invoixe simplifies retail invoicing, wholesale trade, inventory tracking, POS counter billing, attendance/payroll, and GST reporting.
+**Invoixe** is a client solution developed and maintained by **UniCord Tech**. It is a comprehensive desktop-first and mobile-responsive billing platform designed to digitize Indian small and medium enterprises (SMEs). Inspired by the features of Vyapar, Invoixe simplifies retail invoicing, wholesale trade, inventory tracking, POS counter billing, attendance/payroll, and GST reporting.
 
 ### 🌟 Core Product Features
 
@@ -30,7 +31,7 @@ Invoixe is a comprehensive desktop-first and mobile-responsive billing platform 
 *   **👷 Employee Management & Optimistic Attendance:** Full employee lifecycle management with 0ms optimistic UI updates — Daily Attendance Logger (Present, Absent, Half Day, Paid Leave), Monthly Matrix Heatmap, LOP & Salary Auditor, and real-time Attendance-to-Payroll Salary Payout modal with amount-in-words conversion.
 *   **🏢 Multi-Tenant Workspaces:** Create and toggle between multiple business profiles securely. Each tenant has isolated database references, dedicated storage buckets, configuration rules, and staff access controls.
 *   **📊 Timeframe Dashboard Analytics:** Interactive home dashboard with range-based filters (1D, 7D, 1M, 1Y, 5Y, All) updating Today's Sales, Gross Profit, and the Sales vs Expense trend graph in real-time from the database.
-*   **🏭 Manufacturing & BOM Recipes:** Log raw material consumption, work-in-progress batches, and finished goods production runs linked via automated Bill of Materials (BOM) recipes across godowns.
+*   **🏭 Manufacturing & BOM Recipes:** Log raw material consumption, work-in-progress batches, and finished goods production runs linked via automated Bill of Materials (BOM) recipes.
 
 ---
 
@@ -49,7 +50,6 @@ Invoixe is organized as a unified monorepo leveraging npm workspaces:
 │       │   ├── manufacturing/#  Manufacturing batch & BOM tracking pages
 │       │   ├── parties/     #   Customer & supplier party ledger pages
 │       │   ├── invoices/    #   Invoice listing, Thermal & PDF preview pages
-│       │   ├── godowns/     #   Godown (warehouse) management pages
 │       │   └── bank/        #   Bank accounts & cheque management pages
 │       ├── components/      #   App components (kebab-case files)
 │       │   ├── dashboard-metrics.tsx  # KPI cards, trend graph, activity feed
@@ -105,3 +105,12 @@ Invoixe is organized as a unified monorepo leveraging npm workspaces:
 | **Invoice Print Preview** | Complete redesign — clean typography, monospace number columns, billing address card, symmetrical footer |
 | **Parties Page** | Redesigned from scratch with top-level KPI stats, customer/supplier segmentation, and action menus |
 | **Manufacturing Page** | Redesigned with flat, structured UI — raw materials, WIP batches, and finished goods tracking |
+
+---
+
+## 🏢 Parent Organization
+
+**Invoixe** is one of the client solutions built & engineered by **UniCord Tech**.
+* **Product Name:** Invoixe
+* **Parent Company:** UniCord Tech
+* **Tagline:** Invoixe — Powered by UniCord Tech
