@@ -42,24 +42,41 @@ async function checkSupabaseAuth(): Promise<{ ok: boolean; ms: number; error?: s
  * A failure here is reported, not fatal — the API still serves, and /api/health
  * keeps reporting 503 so the cause stays visible rather than surfacing later as
  * mystery 500s on the first real request.
+ *
+ * In CI (no .env file found) we skip the live probes entirely — the smoke test
+ * only needs to confirm the module graph boots without throwing.
  */
 async function reportStartup(app: INestApplication, origins: string[]) {
   console.log(`\n  ${dim("Invoixe API")}`);
   ok("env", loadedEnvPath ? dim(loadedEnvPath) : dim("ambient environment (no .env file found)"));
 
-  const [db, auth] = await Promise.all([app.get(HealthService).supabase(), checkSupabaseAuth()]);
+  // In CI there is no real DB or Supabase — skip live probes to keep the log clean.
+  const isCI = !loadedEnvPath || process.env.CI === "true";
 
-  if (db.db === "connected") ok("database", `Supabase Postgres — healthy ${dim(`(${db.latencyMs}ms)`)}`);
-  else fail("database", `Supabase Postgres UNREACHABLE — ${oneLine(db.error)}`);
+  if (isCI) {
+    ok("database", dim("skipped in CI"));
+    ok("auth",     dim("skipped in CI"));
+  } else {
+    const [db, auth] = await Promise.all([app.get(HealthService).supabase(), checkSupabaseAuth()]);
 
-  if (auth.ok) ok("auth", `Supabase Auth — reachable ${dim(`(${auth.ms}ms)`)}`);
-  else fail("auth", `Supabase Auth unreachable — ${oneLine(auth.error)} (login will fail)`);
+    if (db.db === "connected") ok("database", `Supabase Postgres — healthy ${dim(`(${db.latencyMs}ms)`)}`);
+    else fail("database", `Supabase Postgres UNREACHABLE — ${oneLine(db.error)}`);
+
+    if (auth.ok) ok("auth", `Supabase Auth — reachable ${dim(`(${auth.ms}ms)`)}`);
+    else fail("auth", `Supabase Auth unreachable — ${oneLine(auth.error)} (login will fail)`);
+
+    const healthy = db.db === "connected" && auth.ok;
+    if (!healthy) {
+      ok("cors", dim(origins.join(", ")));
+      ok("api", `http://localhost:${PORT}`);
+      console.log(`  ${red("✗")} started with degraded services — see above\n`);
+      return;
+    }
+  }
 
   ok("cors", dim(origins.join(", ")));
   ok("api", `http://localhost:${PORT}`);
-
-  const healthy = db.db === "connected" && auth.ok;
-  console.log(healthy ? `  ${green("✓")} ready\n` : `  ${red("✗")} started with degraded services — see above\n`);
+  console.log(isCI ? `  ${green("✓")} ready ${dim("(CI mode — live service probes skipped)")}\n` : `  ${green("✓")} ready\n`);
 }
 
 async function bootstrap() {
