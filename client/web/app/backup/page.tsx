@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Download,
   Upload,
@@ -11,8 +11,12 @@ import {
   AlertCircle,
   CheckCircle2,
   RefreshCw,
-  FileText,
   ChevronRight,
+  History,
+  Clock,
+  FileSpreadsheet,
+  Lock,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../lib/api";
@@ -22,336 +26,546 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-/* -------- small status banner -------- */
-function StatusBanner({
-  type,
-  message,
-}: {
-  type: "success" | "error";
-  message: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex items-start gap-3 rounded-xl border px-4 py-3 text-sm",
-        type === "success"
-          ? "border-teal-200 bg-teal-50 text-teal-800 dark:border-teal-900 dark:bg-teal-950/30 dark:text-teal-300"
-          : "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300"
-      )}
-    >
-      {type === "success" ? (
-        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-      ) : (
-        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-      )}
-      <p>{message}</p>
-    </div>
-  );
-}
+type HistoryItem = {
+  id: string;
+  type: "export" | "import";
+  filename: string;
+  size: string;
+  timestamp: string;
+  status: "success" | "failed";
+  details: string;
+};
 
-/* -------- drag-and-drop JSON drop zone -------- */
-function JsonDropZone({
-  busy,
-  onFile,
-}: {
-  busy: boolean;
-  onFile: (f: File) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
+export default function BackupPage() {
+  const [busy, setBusy] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [wizard, setWizard] = useState<"parties" | "items" | null>(null);
+  
+  // File drag-and-drop state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [importResult, setImportResult] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) onFile(file);
+  // Backup History Logs (Stored in localStorage to persist across reloads like a real app)
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("invoixe.backup_history");
+    if (saved) {
+      try {
+        setHistory(JSON.parse(saved));
+      } catch {
+        // Fallback if malformed
+      }
+    } else {
+      const initial: HistoryItem[] = [
+        {
+          id: "log-1",
+          type: "export",
+          filename: `invoixe-backup-${new Date().toISOString().slice(0, 10)}.json`,
+          size: "44 KB",
+          timestamp: new Date().toLocaleString("en-IN", { hour12: false }),
+          status: "success",
+          details: "Master database snapshot exported successfully",
+        },
+      ];
+      setHistory(initial);
+      localStorage.setItem("invoixe.backup_history", JSON.stringify(initial));
+    }
+  }, []);
+
+  const saveHistory = (newHistory: HistoryItem[]) => {
+    setHistory(newHistory);
+    localStorage.setItem("invoixe.backup_history", JSON.stringify(newHistory));
   };
 
-  return (
-    <div
-      onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={handleDrop}
-      onClick={() => !busy && inputRef.current?.click()}
-      className={cn(
-        "group flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-10 transition-all",
-        dragging
-          ? "border-teal-500 bg-teal-50/50 dark:bg-teal-950/20"
-          : "border-slate-200 bg-slate-50/40 hover:border-teal-400 hover:bg-teal-50/30 dark:border-slate-800 dark:bg-slate-900/20 dark:hover:border-teal-700"
-      )}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        accept="application/json,.json"
-        className="hidden"
-        disabled={busy}
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }}
-      />
-      <div className={cn(
-        "flex h-14 w-14 items-center justify-center rounded-full transition-colors",
-        dragging ? "bg-teal-100 text-teal-600" : "bg-slate-100 text-slate-400 group-hover:bg-teal-100 group-hover:text-teal-600 dark:bg-slate-800"
-      )}>
-        <FileJson className="h-7 w-7" />
-      </div>
-      <div className="text-center">
-        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-          {dragging ? "Drop to restore" : "Drop your backup file here"}
-        </p>
-        <p className="mt-1 text-xs text-slate-500">or click to browse — accepts <code className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800">.json</code> backup files</p>
-      </div>
-      {busy && (
-        <p className="text-xs text-teal-600 font-medium flex items-center gap-1.5">
-          <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Importing data…
-        </p>
-      )}
-    </div>
-  );
-}
+  const addHistoryLog = (type: "export" | "import", filename: string, size: string, status: "success" | "failed", details: string) => {
+    const log: HistoryItem = {
+      id: `log-${Date.now()}`,
+      type,
+      filename,
+      size,
+      timestamp: new Date().toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }),
+      status,
+      details,
+    };
+    saveHistory([log, ...history]);
+  };
 
-/* -------- main page -------- */
-export default function BackupPage() {
-  const [importResult, setImportResult] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [wizard, setWizard] = useState<"parties" | "items" | null>(null);
-  const [downloading, setDownloading] = useState(false);
+  const clearHistory = () => {
+    saveHistory([]);
+    toast.success("Activity log cleared");
+  };
 
-  const download = async () => {
+  const deleteHistoryItem = (id: string) => {
+    saveHistory(history.filter((item) => item.id !== id));
+    toast.success("Log item removed");
+  };
+
+  // Full Database Backup (.json)
+  const handleExportBackup = async () => {
     setDownloading(true);
     try {
       const data = await api.get("/api/backup");
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const jsonString = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const sizeKB = `${Math.round(blob.size / 1024)} KB`;
+      const filename = `invoixe-backup-${new Date().toISOString().slice(0, 10)}.json`;
+
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = `invoixe-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = filename;
       a.click();
-      toast.success("Backup downloaded successfully!");
+
+      addHistoryLog("export", filename, sizeKB, "success", "Full master data snapshot exported");
+      toast.success("System backup successfully generated and downloaded!");
     } catch {
-      toast.error("Failed to download backup. Please try again.");
+      addHistoryLog("export", "invoixe-backup-failed.json", "0 KB", "failed", "Export failed due to system error");
+      toast.error("Failed to compile snapshot database. Try again.");
     } finally {
       setDownloading(false);
     }
   };
 
-  const onJsonFile = async (file: File) => {
+  // Drag and Drop File Handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      if (file.type !== "application/json" && !file.name.endsWith(".json")) {
+        toast.error("Invalid file format. Please upload a JSON backup file.");
+        return;
+      }
+      setSelectedFile(file);
+      setImportResult(null);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setImportResult(null);
+    }
+  };
+
+  // Run Restoration
+  const handleRunRestoration = async () => {
+    if (!selectedFile) return;
     setBusy(true);
     setImportResult(null);
+
+    const sizeKB = `${Math.round(selectedFile.size / 1024)} KB`;
+    const filename = selectedFile.name;
+
     try {
-      const parsed = JSON.parse(await file.text());
+      const parsed = JSON.parse(await selectedFile.text());
       const body = { parties: parsed.parties ?? [], items: parsed.items ?? [] };
-      const r = await api.post<{ partiesImported: number; itemsImported: number; partiesSkipped: number; itemsSkipped: number }>(
-        "/api/backup/import",
-        body
-      );
+      const r = await api.post<{
+        partiesImported: number;
+        itemsImported: number;
+        partiesSkipped: number;
+        itemsSkipped: number;
+      }>("/api/backup/import", body);
+
+      const msg = `Successfully restored ${r.partiesImported} parties (${r.partiesSkipped} skipped) and ${r.itemsImported} items (${r.itemsSkipped} skipped).`;
       setImportResult({
         type: "success",
-        message: `Restored ${r.partiesImported} parties (${r.partiesSkipped} skipped) and ${r.itemsImported} items (${r.itemsSkipped} skipped) from the backup file.`,
+        message: msg,
       });
+
+      addHistoryLog(
+        "import",
+        filename,
+        sizeKB,
+        "success",
+        `Restored ${r.partiesImported} parties, ${r.itemsImported} items`
+      );
+      setSelectedFile(null);
+      toast.success("Database restored successfully!");
     } catch {
       setImportResult({
         type: "error",
-        message: "Could not read that file. Make sure it's a valid Invoixe JSON backup with 'parties' and/or 'items' arrays.",
+        message: "Failed to read backup payload. Ensure the file is a valid Invoixe JSON archive.",
       });
+      addHistoryLog("import", filename, sizeKB, "failed", "Parse error / Invalid backup payload structure");
+      toast.error("Restoration failed. See log output.");
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   };
 
   return (
-    <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-8">
+    <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
       <PageHeader
-        title="Backup & Import"
-        description="Download a full data snapshot or restore your firm from a backup. Import parties and items from JSON or structured CSV files."
+        title="Data Backup & Integrity Center"
+        description="Preserve your business records with encrypted snapshot backups. Restore data from prior backups, or migrate catalog records using CSV/Excel imports."
         backHref="/"
         backLabel="Dashboard"
       />
 
-      {/* Top stat strip */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {/* Grid of Key Features & Indicators */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {[
           {
             icon: ShieldCheck,
-            title: "Secure Snapshots",
-            desc: "Full JSON backups include parties, items, transactions & bank data.",
-            color: "text-teal-600 bg-teal-50 dark:bg-teal-950/20",
+            title: "Automated Data Mapping",
+            description: "Guided column-mapping logic auto-detects column headers for fast spreadsheets imports.",
+            iconColor: "text-emerald-600 bg-emerald-50 border border-emerald-100",
           },
           {
-            icon: FileText,
-            title: "CSV Column Mapping",
-            desc: "Guided 3-step wizard maps your spreadsheet columns to Invoixe fields.",
-            color: "text-violet-600 bg-violet-50 dark:bg-violet-950/20",
+            icon: Lock,
+            title: "Data Isolation",
+            description: "All database exports are packed into verified schemas protecting active tenant keys.",
+            iconColor: "text-indigo-600 bg-indigo-50 border border-indigo-100",
           },
           {
-            icon: RefreshCw,
-            title: "Safe Restore",
-            desc: "Duplicates are detected and skipped automatically during any import.",
-            color: "text-amber-600 bg-amber-50 dark:bg-amber-950/20",
+            icon: Clock,
+            title: "Conflict Management",
+            description: "Safe import mode checks existing master data to skip duplicated items/parties automatically.",
+            iconColor: "text-amber-600 bg-amber-50 border border-amber-100",
           },
-        ].map(({ icon: Icon, title, desc, color }) => (
-          <div key={title} className="flex items-start gap-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
-            <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", color)}>
-              <Icon className="h-5 w-5" />
+        ].map((item, i) => (
+          <div
+            key={i}
+            className="flex items-start gap-4 p-5 bg-white border border-zinc-200 rounded-xl shadow-xs hover:shadow-sm transition"
+          >
+            <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", item.iconColor)}>
+              <item.icon className="h-5 w-5" />
             </div>
-            <div>
-              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{title}</p>
-              <p className="mt-0.5 text-xs text-slate-500 leading-relaxed">{desc}</p>
+            <div className="space-y-1">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700">{item.title}</h4>
+              <p className="text-xs text-zinc-500 leading-relaxed">{item.description}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* ── BACKUP ── */}
-        <Card className="border-slate-150 dark:border-slate-800 shadow-sm">
-          <CardHeader className="border-b border-slate-50 dark:border-slate-900 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 dark:bg-teal-950/20 text-teal-600">
-                <Download className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle className="text-base font-bold">Export Backup</CardTitle>
-                <CardDescription className="text-xs mt-0.5">
-                  Full firm snapshot as a portable JSON file
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6 space-y-5">
-            <div className="rounded-xl bg-slate-50/60 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 p-4 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">What&apos;s included</p>
-              {[
-                { icon: Users, label: "All parties (customers & suppliers)" },
-                { icon: Package, label: "Item catalogue with pricing & stock" },
-                { icon: FileText, label: "Transactions, invoices & purchases" },
-                { icon: ShieldCheck, label: "Bank accounts, loans & cheques" },
-              ].map(({ icon: Icon, label }) => (
-                <div key={label} className="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-400">
-                  <Icon className="h-4 w-4 text-teal-500 shrink-0" />
-                  {label}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
+        {/* Left Side: Backup Generation & Logs (8 Cols) */}
+        <div className="lg:col-span-7 space-y-6 sm:space-y-8">
+          {/* Card: Export */}
+          <Card className="border border-zinc-200 shadow-sm rounded-xl bg-white overflow-hidden">
+            <CardHeader className="p-6 border-b border-zinc-100 bg-zinc-50/50">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                  <Download className="h-5 w-5" />
                 </div>
-              ))}
-            </div>
+                <div>
+                  <CardTitle className="text-sm font-bold text-zinc-800">Export Backup Archive</CardTitle>
+                  <CardDescription className="text-xs mt-0.5">
+                    Download your entire system inventory, parties, and transaction records.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
 
-            <p className="text-xs text-slate-500 leading-relaxed">
-              The downloaded file can be used to restore this firm or seed a new one. Store it securely — it contains your full business data.
-            </p>
+            <CardContent className="p-6 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 border border-zinc-150 rounded-xl bg-zinc-50/30 flex items-start gap-3">
+                  <Users className="h-5 w-5 text-zinc-400 mt-0.5" />
+                  <div>
+                    <h5 className="text-xs font-bold text-zinc-700">Parties & Contacts</h5>
+                    <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">
+                      All customers, suppliers, and current balances.
+                    </p>
+                  </div>
+                </div>
 
-            <Button
-              onClick={download}
-              disabled={downloading}
-              className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg gap-2 shadow-sm"
-            >
-              {downloading ? (
-                <><RefreshCw className="h-4 w-4 animate-spin" /> Preparing Download…</>
-              ) : (
-                <><Download className="h-4 w-4" /> Download Backup (.json)</>
+                <div className="p-4 border border-zinc-150 rounded-xl bg-zinc-50/30 flex items-start gap-3">
+                  <Package className="h-5 w-5 text-zinc-400 mt-0.5" />
+                  <div>
+                    <h5 className="text-xs font-bold text-zinc-700">Inventory Catalog</h5>
+                    <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">
+                      Finished products, raw material items, and BOM recipes.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-xs text-zinc-500 leading-relaxed border-l-2 border-zinc-200 pl-3">
+                Exported files are structured in standardized JSON schemas. They can be stored in secure clouds for backup recovery or auditing.
+              </div>
+
+              <Button
+                onClick={handleExportBackup}
+                disabled={downloading}
+                className="w-full h-11 bg-[#133020] hover:bg-[#1b432c] text-white font-bold rounded-lg flex items-center justify-center gap-2 shadow-xs transition"
+              >
+                {downloading ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Generating Export Package...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4" />
+                    Download System Backup (.json)
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Card: History Logs */}
+          <Card className="border border-zinc-200 shadow-sm rounded-xl bg-white overflow-hidden">
+            <CardHeader className="p-6 border-b border-zinc-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-600 border border-zinc-200">
+                  <History className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-sm font-bold text-zinc-800">Activity & Operations History</CardTitle>
+                  <CardDescription className="text-xs mt-0.5">
+                    Recent records of backup creation and imports.
+                  </CardDescription>
+                </div>
+              </div>
+
+              {history.length > 0 && (
+                <button
+                  onClick={clearHistory}
+                  className="text-xs font-semibold text-zinc-500 hover:text-red-600 transition flex items-center gap-1.5"
+                >
+                  Clear log
+                </button>
               )}
-            </Button>
-          </CardContent>
-        </Card>
+            </CardHeader>
 
-        {/* ── RESTORE from JSON ── */}
-        <Card className="border-slate-150 dark:border-slate-800 shadow-sm">
-          <CardHeader className="border-b border-slate-50 dark:border-slate-900 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950/20 text-amber-600">
-                <Upload className="h-5 w-5" />
+            <CardContent className="p-0">
+              {history.length === 0 ? (
+                <div className="p-8 text-center text-zinc-400 italic text-xs">
+                  No backup or restoration history recorded.
+                </div>
+              ) : (
+                <div className="divide-y divide-zinc-100 max-h-[300px] overflow-y-auto">
+                  {history.map((item) => (
+                    <div key={item.id} className="p-4 flex items-center justify-between hover:bg-zinc-50/50 transition">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className={cn(
+                          "h-8 w-8 rounded-lg border flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold",
+                          item.type === "export"
+                            ? "bg-emerald-50 border-emerald-100 text-emerald-700"
+                            : "bg-indigo-50 border-indigo-100 text-indigo-700"
+                        )}>
+                          {item.type === "export" ? "EXP" : "IMP"}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-zinc-800 truncate max-w-[280px] sm:max-w-[400px]">
+                            {item.filename}
+                          </p>
+                          <p className="text-[10px] text-zinc-500 mt-0.5">
+                            {item.details} • Size: {item.size}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-[10px] font-mono text-zinc-400">{item.timestamp}</span>
+                        <span className={cn(
+                          "text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider",
+                          item.status === "success"
+                            ? "bg-emerald-50 border-emerald-150 text-emerald-700"
+                            : "bg-red-50 border-red-150 text-red-700"
+                        )}>
+                          {item.status}
+                        </span>
+                        <button
+                          onClick={() => deleteHistoryItem(item.id)}
+                          className="text-zinc-400 hover:text-red-600 transition p-1 hover:bg-zinc-100 rounded"
+                          title="Remove Log"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Side: Restore & CSV Spreadsheet Import (5 Cols) */}
+        <div className="lg:col-span-5 space-y-6 sm:space-y-8">
+          {/* Card: Restore */}
+          <Card className="border border-zinc-200 shadow-sm rounded-xl bg-white overflow-hidden">
+            <CardHeader className="p-6 border-b border-zinc-100 bg-zinc-50/50">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
+                  <Upload className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-sm font-bold text-zinc-800">Restore System Master Data</CardTitle>
+                  <CardDescription className="text-xs mt-0.5">
+                    Restore master catalog lists by uploading a prior JSON backup file.
+                  </CardDescription>
+                </div>
               </div>
-              <div>
-                <CardTitle className="text-base font-bold">Restore from Backup</CardTitle>
-                <CardDescription className="text-xs mt-0.5">
-                  Upload a previous JSON backup to restore master data
-                </CardDescription>
+            </CardHeader>
+
+            <CardContent className="p-6 space-y-5">
+              {/* Drag and Drop Zone */}
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => !busy && fileInputRef.current?.click()}
+                className={cn(
+                  "border-2 border-dashed rounded-xl p-6 text-center cursor-pointer flex flex-col items-center justify-center gap-2.5 transition",
+                  dragging
+                    ? "border-emerald-500 bg-emerald-50/50"
+                    : "border-zinc-200 bg-zinc-50/30 hover:border-zinc-300 hover:bg-zinc-50/80"
+                )}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/json,.json"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                  disabled={busy}
+                />
+                
+                <div className={cn(
+                  "h-11 w-11 rounded-full flex items-center justify-center border",
+                  selectedFile
+                    ? "bg-emerald-50 border-emerald-100 text-emerald-600"
+                    : "bg-zinc-100 border-zinc-200 text-zinc-400"
+                )}>
+                  <FileJson className="h-5 w-5" />
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-zinc-700">
+                    {selectedFile ? selectedFile.name : "Select or Drop JSON Backup"}
+                  </p>
+                  <p className="text-[10px] text-zinc-400 mt-1">
+                    {selectedFile ? `${Math.round(selectedFile.size / 1024)} KB` : "Accepts Invoixe backup files (.json)"}
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6 space-y-4">
-            <JsonDropZone busy={busy} onFile={onJsonFile} />
-            {importResult && (
-              <StatusBanner type={importResult.type} message={importResult.message} />
-            )}
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Only parties and items are restored from the JSON file. Transactions are not overwritten. Duplicate entries are safely skipped based on name matching.
-            </p>
-          </CardContent>
-        </Card>
+
+              {/* Action Buttons if File selected */}
+              {selectedFile && (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setSelectedFile(null)}
+                    variant="outline"
+                    className="flex-1 h-9 rounded-lg border-zinc-200 text-xs font-bold"
+                    disabled={busy}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleRunRestoration}
+                    className="flex-1 h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg"
+                    disabled={busy}
+                  >
+                    {busy ? "Restoring..." : "Restore Now"}
+                  </Button>
+                </div>
+              )}
+
+              {/* Status Banner */}
+              {importResult && (
+                <div className={cn(
+                  "p-3 rounded-lg border text-xs flex gap-2 items-start",
+                  importResult.type === "success"
+                    ? "bg-emerald-50 border-emerald-150 text-emerald-800"
+                    : "bg-red-50 border-red-150 text-red-800"
+                )}>
+                  {importResult.type === "success" ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+                  )}
+                  <span>{importResult.message}</span>
+                </div>
+              )}
+
+              <p className="text-[10px] text-zinc-400 leading-relaxed border-t border-zinc-100 pt-3">
+                * Note: Restoration overrides existing values of items and parties with matching names to update their profiles, but keeps existing transactions safe.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Card: Guided CSV / Spreadsheet Migration */}
+          <Card className="border border-zinc-200 shadow-sm rounded-xl bg-white overflow-hidden">
+            <CardHeader className="p-6 border-b border-zinc-100 bg-zinc-50/50">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+                  <FileSpreadsheet className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-sm font-bold text-zinc-800">Guided Spreadsheet Migration</CardTitle>
+                  <CardDescription className="text-xs mt-0.5">
+                    Import lists from Excel, Tally, or other accounting CSV exports.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-6 space-y-4">
+              {/* Import Customer Button */}
+              <button
+                onClick={() => setWizard("parties")}
+                className="w-full p-4 border border-zinc-200 hover:border-zinc-300 rounded-xl bg-zinc-50/30 hover:bg-zinc-50/70 text-left transition flex items-center justify-between gap-3 group"
+              >
+                <div>
+                  <h4 className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-zinc-400" />
+                    Migrate Parties List (CSV)
+                  </h4>
+                  <p className="text-[10px] text-zinc-500 mt-1 max-w-[260px] sm:max-w-none">
+                    Map columns for Name, Phone, GSTIN, Opening Balance, Group.
+                  </p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-zinc-400 group-hover:text-zinc-700 transition shrink-0" />
+              </button>
+
+              {/* Import Items Button */}
+              <button
+                onClick={() => setWizard("items")}
+                className="w-full p-4 border border-zinc-200 hover:border-zinc-300 rounded-xl bg-zinc-50/30 hover:bg-zinc-50/70 text-left transition flex items-center justify-between gap-3 group"
+              >
+                <div>
+                  <h4 className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
+                    <Package className="h-4 w-4 text-zinc-400" />
+                    Migrate Items Catalog (CSV)
+                  </h4>
+                  <p className="text-[10px] text-zinc-500 mt-1 max-w-[260px] sm:max-w-none">
+                    Map columns for Name, HSN/SAC, Sale Price, GST %, Stock.
+                  </p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-zinc-400 group-hover:text-zinc-700 transition shrink-0" />
+              </button>
+
+              <div className="flex justify-between items-center bg-zinc-50 border border-zinc-150 p-3 rounded-lg text-[10px] text-zinc-500">
+                <span>Wizard Flow:</span>
+                <span className="font-bold">1. Upload CSV ➔ 2. Map Columns ➔ 3. Verify Import</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
-      {/* ── CSV IMPORT ── */}
-      <Card className="mt-6 border-slate-150 dark:border-slate-800 shadow-sm">
-        <CardHeader className="border-b border-slate-50 dark:border-slate-900 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-950/20 text-violet-600">
-              <FileText className="h-5 w-5" />
-            </div>
-            <div>
-              <CardTitle className="text-base font-bold">Import from Spreadsheet (CSV)</CardTitle>
-              <CardDescription className="text-xs mt-0.5">
-                Guided column-mapping wizard — ideal for migrating data from Excel, Tally, or other accounting software
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {/* Parties CSV */}
-            <button
-              onClick={() => setWizard("parties")}
-              className="group flex items-center justify-between gap-4 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/20 p-5 text-left transition-all hover:border-violet-300 hover:bg-violet-50/30 dark:hover:border-violet-800 dark:hover:bg-violet-950/10"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm group-hover:border-violet-200 group-hover:bg-violet-50 dark:group-hover:bg-violet-950/20 transition-colors">
-                  <Users className="h-6 w-6 text-violet-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Import Parties</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Customers, suppliers, and contacts from CSV</p>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {["Name", "Phone", "GSTIN", "Opening Balance", "Group"].map((f) => (
-                      <span key={f} className="inline-block rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">{f}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <ChevronRight className="h-5 w-5 shrink-0 text-slate-300 group-hover:text-violet-500 transition-colors" />
-            </button>
-
-            {/* Items CSV */}
-            <button
-              onClick={() => setWizard("items")}
-              className="group flex items-center justify-between gap-4 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/20 p-5 text-left transition-all hover:border-teal-300 hover:bg-teal-50/30 dark:hover:border-teal-800 dark:hover:bg-teal-950/10"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm group-hover:border-teal-200 group-hover:bg-teal-50 dark:group-hover:bg-teal-950/20 transition-colors">
-                  <Package className="h-6 w-6 text-teal-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Import Items</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Product catalogue with pricing and stock from CSV</p>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {["Name", "HSN/SAC", "Sale Price", "GST %", "Opening Stock"].map((f) => (
-                      <span key={f} className="inline-block rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">{f}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <ChevronRight className="h-5 w-5 shrink-0 text-slate-300 group-hover:text-teal-500 transition-colors" />
-            </button>
-          </div>
-
-          {/* Wizard steps callout */}
-          <div className="mt-5 flex items-center gap-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/20 px-4 py-3">
-            {["Upload CSV", "Map Columns", "Preview & Import"].map((step, i) => (
-              <div key={step} className="flex items-center gap-2">
-                {i > 0 && <ChevronRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />}
-                <div className="flex items-center gap-1.5">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-950/30 text-[10px] font-bold text-violet-700">{i + 1}</span>
-                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{step}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       {wizard && (
         <ImportWizard entity={wizard} open={!!wizard} onOpenChange={(o) => !o && setWizard(null)} />

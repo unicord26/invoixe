@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatINR, rupeesToPaise } from "@invoixe/core";
 import { api } from "../../lib/api";
@@ -499,16 +498,13 @@ export default function BankPage() {
   };
 
   const inputStyle =
-    "w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 dark:border-zinc-800 dark:bg-zinc-950";
+    "w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:border-zinc-800 dark:bg-zinc-950";
 
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Back button and Page Title */}
       <div className="flex flex-col gap-4 border-b border-gray-100 pb-6 md:flex-row md:items-center justify-between dark:border-zinc-800">
         <div>
-          <Link href="/" className="text-xs font-semibold text-[#16a34a] hover:underline flex items-center gap-1 mb-1">
-            ← Back to Dashboard
-          </Link>
           <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
             Cash &amp; Bank Portal
           </h1>
@@ -542,7 +538,7 @@ export default function BankPage() {
           <Button
             onClick={() => setActiveTab("add")}
             size="sm"
-            className="h-9 gap-2 rounded-xl bg-[#16a34a] hover:bg-[#117a37] font-bold text-white"
+            className="h-9 gap-2 rounded-xl bg-primary hover:bg-primary/90 font-bold text-primary-foreground"
           >
             <PlusCircle className="h-4 w-4" />
             Add Bank Account
@@ -552,53 +548,65 @@ export default function BankPage() {
 
       {/* 1. Header Assets KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-green-500 to-emerald-600" />
-          <CardContent className="flex items-center justify-between p-6">
-            <div className="space-y-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+        <Card className="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-950">
+          <CardContent className="p-0 flex flex-col justify-between h-full">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                 Net Assets Value
               </span>
-              <h2 className={cn("text-2xl font-bold tracking-tight", totalAssets < 0 ? "text-red-500" : "text-gray-900 dark:text-white")}>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-50 text-zinc-450 dark:bg-zinc-900 dark:text-zinc-550">
+                <Sparkles className="h-4.5 w-4.5" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <h2 className={cn("text-xl font-extrabold tracking-tight", totalAssets < 0 ? "text-red-500" : "text-zinc-900 dark:text-zinc-50")}>
                 {formatINR(totalAssets)}
               </h2>
-            </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-50 text-green-600 dark:bg-green-950/20 dark:text-green-400">
-              <Sparkles className="h-5.5 w-5.5" />
+              <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-zinc-400 dark:text-zinc-500">
+                Total valuation of register and bank balances
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600" />
-          <CardContent className="flex items-center justify-between p-6">
-            <div className="space-y-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+        <Card className="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-950">
+          <CardContent className="p-0 flex flex-col justify-between h-full">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                 Bank &amp; UPI Balances
               </span>
-              <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-50 text-zinc-450 dark:bg-zinc-900 dark:text-zinc-550">
+                <Landmark className="h-4.5 w-4.5" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <h2 className="text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
                 {formatINR(bankBalances)}
               </h2>
-            </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/20 dark:text-blue-400">
-              <Landmark className="h-5.5 w-5.5" />
+              <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-zinc-400 dark:text-zinc-500">
+                Liquid capital in bank/UPI
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-400 to-amber-600" />
-          <CardContent className="flex items-center justify-between p-6">
-            <div className="space-y-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+        <Card className="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-950">
+          <CardContent className="p-0 flex flex-col justify-between h-full">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                 Cash in Hand
               </span>
-              <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-50 text-zinc-450 dark:bg-zinc-900 dark:text-zinc-550">
+                <Wallet className="h-4.5 w-4.5" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <h2 className="text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
                 {formatINR(cashBalances)}
               </h2>
-            </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400">
-              <Wallet className="h-5.5 w-5.5" />
+              <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-zinc-400 dark:text-zinc-500">
+                Physical register cash balance
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -630,7 +638,7 @@ export default function BankPage() {
                 <Button
                   onClick={() => setActiveTab("add")}
                   size="sm"
-                  className="mt-4 gap-2 rounded-xl bg-[#16a34a] hover:bg-[#117a37] font-bold text-white"
+                  className="mt-4 gap-2 rounded-xl bg-primary hover:bg-primary/90 font-bold text-primary-foreground"
                 >
                   <PlusCircle className="h-4 w-4" />
                   Add Bank Account
@@ -646,7 +654,7 @@ export default function BankPage() {
                     className={cn(
                       "cursor-pointer relative overflow-hidden rounded-2xl border p-5 transition-all duration-300 hover:shadow-sm",
                       isSelected
-                        ? "border-[#16a34a] bg-green-50/20 shadow-sm dark:bg-green-950/10"
+                        ? "border-primary bg-primary/5 shadow-sm dark:bg-primary/10"
                         : "border-gray-100 bg-white hover:border-gray-250 dark:border-zinc-900 dark:bg-zinc-950 dark:hover:border-zinc-800"
                     )}
                   >
@@ -657,7 +665,7 @@ export default function BankPage() {
                             "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
                             a.type === "cash" && "bg-amber-50 text-amber-600 dark:bg-amber-950/20",
                             a.type === "upi" && "bg-blue-50 text-blue-600 dark:bg-blue-950/20",
-                            a.type !== "cash" && a.type !== "upi" && "bg-emerald-50 text-[#16a34a] dark:bg-green-950/20"
+                            a.type !== "cash" && a.type !== "upi" && "bg-primary/10 text-primary dark:bg-primary/20"
                           )}
                         >
                           {a.type === "cash" && <Wallet className="h-5 w-5" />}
@@ -708,7 +716,7 @@ export default function BankPage() {
                   </p>
                   <div className="mt-1.5 flex flex-wrap items-center gap-2">
                     <span className="font-extrabold text-gray-800 dark:text-white">{selectedAccount.name}</span>
-                    <Badge className="bg-[#16a34a]/10 text-[#16a34a] border-transparent font-bold capitalize text-[10px] py-0 px-2 h-5">
+                    <Badge className="bg-primary/10 text-primary border-transparent font-bold capitalize text-[10px] py-0 px-2 h-5 hover:bg-primary/20">
                       {selectedAccount.type}
                     </Badge>
                   </div>
@@ -716,7 +724,7 @@ export default function BankPage() {
                 <div className="flex items-center gap-4 self-end sm:self-center">
                   <div className="text-xs">
                     <span className="text-gray-500">Active Balance:</span>{" "}
-                    <span className={cn("font-bold", selectedAccount.balance < 0 ? "text-red-500" : "text-green-600")}>
+                    <span className={cn("font-bold", selectedAccount.balance < 0 ? "text-red-500" : "text-primary")}>
                       {formatINR(selectedAccount.balance)}
                     </span>
                   </div>
@@ -725,7 +733,7 @@ export default function BankPage() {
                       onClick={() => setCashAuditOpen(true)}
                       variant="outline"
                       size="sm"
-                      className="h-8 gap-1.5 rounded-lg border-teal-200 text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:border-teal-950 dark:hover:bg-teal-950/20 font-bold"
+                      className="h-8 gap-1.5 rounded-lg border-primary/30 text-primary hover:text-primary/95 hover:bg-primary/10 dark:border-primary/20 dark:hover:bg-primary/20 font-bold"
                       title="Perform physical cash audit"
                     >
                       <Calculator className="h-4 w-4" />
@@ -786,7 +794,7 @@ export default function BankPage() {
                         value={depositAmount}
                         onChange={(e) => setDepositAmount(e.target.value)}
                         required
-                        className="rounded-xl border-gray-200 focus-visible:ring-1 focus-visible:ring-[#16a34a]"
+                        className="rounded-xl border-gray-200 focus-visible:ring-1 focus-visible:ring-primary"
                       />
                     </div>
                     <div>
@@ -805,7 +813,7 @@ export default function BankPage() {
                     <Button
                       type="submit"
                       disabled={entryMutation.isPending || !depositAmount}
-                      className="rounded-xl bg-[#16a34a] hover:bg-[#117a37] font-bold text-white px-5"
+                      className="rounded-xl bg-primary hover:bg-primary/90 font-bold text-primary-foreground px-5"
                     >
                       {entryMutation.isPending ? "Depositing…" : "Submit Deposit"}
                     </Button>
@@ -828,7 +836,7 @@ export default function BankPage() {
                         value={withdrawAmount}
                         onChange={(e) => setWithdrawAmount(e.target.value)}
                         required
-                        className="rounded-xl border-gray-200 focus-visible:ring-1 focus-visible:ring-[#16a34a]"
+                        className="rounded-xl border-gray-200 focus-visible:ring-1 focus-visible:ring-primary"
                       />
                     </div>
                     <div>
@@ -902,7 +910,7 @@ export default function BankPage() {
                         value={xfer.amount}
                         onChange={(e) => setXfer({ ...xfer, amount: e.target.value })}
                         required
-                        className="rounded-xl border-gray-200 focus-visible:ring-1 focus-visible:ring-[#16a34a]"
+                        className="rounded-xl border-gray-200 focus-visible:ring-1 focus-visible:ring-primary"
                       />
                     </div>
                   </div>
@@ -910,7 +918,7 @@ export default function BankPage() {
                     <Button
                       type="submit"
                       disabled={transferMutation.isPending || !xfer.toId || !xfer.amount}
-                      className="rounded-xl bg-[#16a34a] hover:bg-[#117a37] font-bold text-white px-5"
+                      className="rounded-xl bg-primary hover:bg-primary/90 font-bold text-primary-foreground px-5"
                     >
                       {transferMutation.isPending ? "Transferring…" : "Execute Transfer"}
                     </Button>
@@ -1061,7 +1069,7 @@ export default function BankPage() {
                     <Button
                       type="submit"
                       disabled={addAcctMutation.isPending || !name.trim()}
-                      className="rounded-xl bg-[#16a34a] hover:bg-[#117a37] font-bold text-white px-5 gap-2"
+                      className="rounded-xl bg-primary hover:bg-primary/90 font-bold text-primary-foreground px-5 gap-2"
                     >
                       <PlusCircle className="h-4.5 w-4.5" />
                       Add Account
@@ -1084,13 +1092,13 @@ export default function BankPage() {
           <Button
             onClick={() => setCardDialogOpen(true)}
             size="sm"
-            className="h-9 gap-2 rounded-xl bg-[#16a34a] hover:bg-[#117a37] font-bold text-white"
+            className="h-9 gap-2 rounded-xl bg-primary hover:bg-primary/90 font-bold text-primary-foreground"
           >
             <PlusCircle className="h-4 w-4" />
             Add Card
           </Button>
         </div>
-        <div className="mb-6 flex items-start gap-2 rounded-xl bg-emerald-50/60 p-3 text-xs text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300">
+        <div className="mb-6 flex items-start gap-2 rounded-xl bg-primary/10 p-3 text-xs text-primary dark:bg-primary/20 dark:text-primary-foreground">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
             For your security we store <strong>only the last 4 digits</strong>, network, and expiry label —
@@ -1234,7 +1242,7 @@ export default function BankPage() {
                           variant="outline"
                           className={cn(
                             "text-[10px] py-0 px-2 font-bold uppercase border-transparent shrink-0",
-                            e.kind === "deposit" && "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20",
+                            e.kind === "deposit" && "bg-primary/10 text-primary dark:bg-primary/20",
                             e.kind === "withdraw" && "bg-rose-50 text-rose-700 dark:bg-rose-950/20",
                             e.kind === "transfer_in" && "bg-blue-50 text-blue-700 dark:bg-blue-950/20",
                             e.kind === "transfer_out" && "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/20"
@@ -1246,7 +1254,7 @@ export default function BankPage() {
                       <td className="px-5 py-3 text-gray-500 max-w-xs truncate" title={e.note ?? ""}>
                         {e.note || "—"}
                       </td>
-                      <td className={cn("px-5 py-3 text-right font-extrabold", isIn ? "text-emerald-600" : "text-rose-600")}>
+                      <td className={cn("px-5 py-3 text-right font-extrabold", isIn ? "text-primary" : "text-rose-600")}>
                         {isIn ? "+" : "-"} {formatINR(Math.abs(e.amount))}
                       </td>
                     </tr>
@@ -1289,7 +1297,7 @@ export default function BankPage() {
         <DialogContent className="max-w-[480px] rounded-3xl border border-gray-100 p-6 shadow-2xl dark:border-zinc-900 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <Calculator className="h-5.5 w-5.5 text-teal-500" />
+              <Calculator className="h-5.5 w-5.5 text-primary" />
               Physical Cash Audit
             </DialogTitle>
             <DialogDescription className="text-xs text-gray-500">
@@ -1355,8 +1363,8 @@ export default function BankPage() {
               return (
                 <div className={cn(
                   "flex justify-between p-2 rounded-xl border font-bold text-[11px]",
-                  diff === 0 && "bg-emerald-50/50 text-emerald-700 border-emerald-100/50 dark:bg-emerald-950/10 dark:text-emerald-400 dark:border-emerald-900/30",
-                  diff > 0 && "bg-teal-50/50 text-teal-700 border-teal-100/50 dark:bg-teal-950/10 dark:text-teal-400 dark:border-teal-900/30",
+                  diff === 0 && "bg-primary/10 text-primary border-primary/20 dark:bg-primary/20 dark:text-primary-foreground dark:border-primary/30",
+                  diff > 0 && "bg-primary/10 text-primary border-primary/20 dark:bg-primary/20 dark:text-primary-foreground dark:border-primary/30",
                   diff < 0 && "bg-rose-50/50 text-rose-700 border-rose-100/50 dark:bg-rose-950/10 dark:text-rose-400 dark:border-rose-900/30"
                 )}>
                   <span>Discrepancy:</span>
@@ -1408,7 +1416,7 @@ export default function BankPage() {
                     setCashDenominations({ "2000": 0, "500": 0, "200": 0, "100": 0, "50": 0, "20": 0, "10": 0, "coins": 0 });
                   }}
                   disabled={diff === 0}
-                  className="rounded-xl bg-teal-600 hover:bg-teal-700 font-bold text-white"
+                  className="rounded-xl bg-primary hover:bg-primary/90 font-bold text-primary-foreground"
                   size="sm"
                 >
                   Reconcile Balance

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * seed-items.mjs
  * ----------------
  * 1. Undoes / clears existing item stock, BOMs, and items for the business.
@@ -292,7 +292,7 @@ async function main() {
         name: rm.name,
         type: "product",
         categoryId: rawCat.id,
-        unit: rm.unit,
+        unit: "g",
         salePrice: rs(rm.salePriceRs),
         purchasePrice: rs(rm.purchasePriceRs),
         taxRate: rm.taxRate,
@@ -301,7 +301,7 @@ async function main() {
       },
     });
     itemRecordsMap[rm.code] = item.id;
-    console.log(`  🧪 Raw Item: "${rm.name}" (${rm.code}) — Stock: ${rm.openingStock} ${rm.unit}`);
+    console.log(`  🧪 Raw Item: "${rm.name}" (${rm.code}) — Stock: ${rm.openingStock} g`);
   }
 
   // 3. Link BOM Recipes

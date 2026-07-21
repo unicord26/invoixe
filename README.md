@@ -29,6 +29,8 @@
 *   **📦 Advanced Inventory Engine:** Strictly separate Finished Product Lists from Raw Materials. Define products and services with tax-inclusive/exclusive pricing structures, assign custom SKUs/codes, track live stock counts (`184,420 PCS`), and manage batch expiries or unique serial numbers.
 *   **👥 Dual-Party Ledger:** Maintain active customer and supplier profiles, set credit limits or grace periods, track opening balances, verify GSTINs, and generate ledger balance statements.
 *   **👷 Employee Management & Optimistic Attendance:** Full employee lifecycle management with 0ms optimistic UI updates — Daily Attendance Logger (Present, Absent, Half Day, Paid Leave), Monthly Matrix Heatmap, LOP & Salary Auditor, and real-time Attendance-to-Payroll Salary Payout modal with amount-in-words conversion.
+*   **🏦 Unified Cheques & Loans Portal:** Consolidated business loans and cheque registers in one dashboard. Track outstanding credit liabilities, repayment percentages, and EMI drawdowns while logging cheque clearance cycles associated directly with active customer/supplier profiles and bank ledgers.
+*   **📋 GST Compliance Center:** Step-by-step GSTR-1 and GSTR-3B filing wizards with live document checklists, automated tax preview calculations, download options, and a clean interface tailored for small business owners (vyaparis).
 *   **🏢 Multi-Tenant Workspaces:** Create and toggle between multiple business profiles securely. Each tenant has isolated database references, dedicated storage buckets, configuration rules, and staff access controls.
 *   **📊 Timeframe Dashboard Analytics:** Interactive home dashboard with range-based filters (1D, 7D, 1M, 1Y, 5Y, All) updating Today's Sales, Gross Profit, and the Sales vs Expense trend graph in real-time from the database.
 *   **🏭 Manufacturing & BOM Recipes:** Log raw material consumption, work-in-progress batches, and finished goods production runs linked via automated Bill of Materials (BOM) recipes.
@@ -50,7 +52,8 @@ Invoixe is organized as a unified monorepo leveraging npm workspaces:
 │       │   ├── manufacturing/#  Manufacturing batch & BOM tracking pages
 │       │   ├── parties/     #   Customer & supplier party ledger pages
 │       │   ├── invoices/    #   Invoice listing, Thermal & PDF preview pages
-│       │   └── bank/        #   Bank accounts & cheque management pages
+│       │   ├── gst/         #   GST Compliance filing center
+│       │   └── bank/        #   Bank accounts, Unified Cheques & Loans pages
 │       ├── components/      #   App components (kebab-case files)
 │       │   ├── dashboard-metrics.tsx  # KPI cards, trend graph, activity feed
 │       │   ├── app-shell.tsx          # Sidebar nav with employee section
@@ -82,6 +85,17 @@ Invoixe is organized as a unified monorepo leveraging npm workspaces:
 ---
 
 ## 📐 Recent Changes
+
+### v0.4 — July 2026
+
+| Area | Change |
+|------|--------|
+| **GST Compliance** | Completely redesigned GSTR-1 and GSTR-3B filing wizards with live document checklists, automated tax preview calculations, download options, and a clean interface tailored for small business owners (vyaparis) without technical JSON jargon. |
+| **Cheques & Loans Consolidation** | Merged standalone pages into a unified `/bank/cheques` portal with dynamic tabs, interactive loan repayment progress calculations, EMI drawdowns, ledger bank accounts, and linked customers/suppliers. |
+| **Bank Color & Layout Sync** | Synchronized colors on the bank page with the brand teal theme. Added the `relative` utility class to all KPI cards to contain top accent borders within their boxes. |
+| **Clean KPI Dashboard Cards** | Redesigned Net Assets, Bank Balances, and Cash in Hand cards across the Cash & Bank sections to use the exact structure, font weights, and spacing of the main dashboard KPI cards. |
+
+---
 
 ### v0.3 — July 2026
 

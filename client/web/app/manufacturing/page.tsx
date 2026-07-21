@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Factory,
@@ -10,7 +9,6 @@ import {
   Trash2,
   CheckCircle2,
   AlertTriangle,
-  ArrowLeft,
   Layers,
   Activity,
 } from "lucide-react";
@@ -33,7 +31,7 @@ export default function ManufacturingPage() {
   const [finishedId, setFinishedId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"bom" | "produce">("bom");
-  const [rows, setRows] = useState<{ rawItemId: string; qty: string }[]>([]);
+  const [rows, setRows] = useState<{ rawItemId: string; qtyInput: string; gramsInput: string }[]>([]);
   const [produceQty, setProduceQty] = useState("");
 
   const { data: bom, isLoading: bomLoading } = useQuery({
@@ -44,7 +42,7 @@ export default function ManufacturingPage() {
 
   useEffect(() => {
     if (bom) {
-      setRows(bom.lines.map((l) => ({ rawItemId: l.rawItemId, qty: String(l.qty) })));
+      setRows(bom.lines.map((l) => ({ rawItemId: l.rawItemId, qtyInput: "1", gramsInput: String(l.qty) })));
     } else {
       setRows([]);
     }
@@ -54,8 +52,11 @@ export default function ManufacturingPage() {
     mutationFn: () =>
       api.put(`/api/bom/${finishedId}`, {
         lines: rows
-          .filter((r) => r.rawItemId && Number(r.qty) > 0)
-          .map((r) => ({ rawItemId: r.rawItemId, qty: Number(r.qty) })),
+          .filter((r) => r.rawItemId && Number(r.qtyInput) > 0 && Number(r.gramsInput) > 0)
+          .map((r) => ({
+            rawItemId: r.rawItemId,
+            qty: Number(r.qtyInput) * Number(r.gramsInput),
+          })),
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["bom", finishedId] });
@@ -121,7 +122,7 @@ export default function ManufacturingPage() {
       ...line,
       name: rawItem?.name ?? "Unknown Material",
       code: rawItem?.itemCode ?? "N/A",
-      unit: rawItem?.unit ?? "PCS",
+      unit: "g",
       needed,
       available,
       shortage,
@@ -132,12 +133,6 @@ export default function ManufacturingPage() {
 
   return (
     <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-8">
-      {/* Breadcrumb Header */}
-      <div className="mb-6">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-800 transition">
-          <ArrowLeft className="h-3 w-3" /> Back to Dashboard
-        </Link>
-      </div>
 
       <div className="mb-8 border-b border-zinc-200 pb-6 flex items-center justify-between">
         <div>
@@ -294,15 +289,16 @@ export default function ManufacturingPage() {
                       <table className="w-full border-collapse text-left text-xs">
                         <thead>
                           <tr className="bg-zinc-50 text-zinc-600 font-semibold border-b border-zinc-150">
-                            <th className="py-2.5 px-4 w-[60%]">Raw Material Item</th>
-                            <th className="py-2.5 px-4 w-[25%]">Qty per Unit</th>
-                            <th className="py-2.5 px-4 w-[15%] text-right">Action</th>
+                            <th className="py-2.5 px-4 w-[50%]">Raw Material Item</th>
+                            <th className="py-2.5 px-4 w-[20%]">Quantity</th>
+                            <th className="py-2.5 px-4 w-[20%]">Grams (g)</th>
+                            <th className="py-2.5 px-4 w-[10%] text-right">Action</th>
                           </tr>
                         </thead>
                         <tbody>
                           {rows.length === 0 ? (
                             <tr>
-                              <td colSpan={3} className="py-8 px-4 text-center text-zinc-400 italic">
+                              <td colSpan={4} className="py-8 px-4 text-center text-zinc-400 italic">
                                 No raw materials added yet. Add materials below to configure the recipe.
                               </td>
                             </tr>
@@ -330,21 +326,38 @@ export default function ManufacturingPage() {
                                   </select>
                                 </td>
                                 <td className="py-2.5 px-4">
+                                  <input
+                                    type="number"
+                                    step="any"
+                                    min="0"
+                                    placeholder="e.g. 1"
+                                    value={row.qtyInput}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      if (val.startsWith("-")) return;
+                                      setRows((p) =>
+                                        p.map((x, idx) => (idx === i ? { ...x, qtyInput: val } : x))
+                                      );
+                                    }}
+                                    className="w-full bg-white border border-zinc-200 rounded-md px-2 py-1.5 outline-none focus:border-zinc-300 text-xs text-center"
+                                  />
+                                </td>
+                                <td className="py-2.5 px-4">
                                   <div className="flex items-center gap-1.5">
                                     <input
                                       type="number"
                                       step="any"
                                       min="0"
-                                      placeholder="e.g. 200"
-                                      value={row.qty}
+                                      placeholder="e.g. 0.055"
+                                      value={row.gramsInput}
                                       onChange={(e) => {
                                         const val = e.target.value;
                                         if (val.startsWith("-")) return;
                                         setRows((p) =>
-                                          p.map((x, idx) => (idx === i ? { ...x, qty: val } : x))
+                                          p.map((x, idx) => (idx === i ? { ...x, gramsInput: val } : x))
                                         );
                                       }}
-                                      className="w-28 bg-white border border-zinc-200 rounded-md px-2 py-1.5 outline-none focus:border-zinc-300 text-xs"
+                                      className="w-full bg-white border border-zinc-200 rounded-md px-2 py-1.5 outline-none focus:border-zinc-300 text-xs text-center"
                                     />
                                     <span className="shrink-0 text-[10px] font-bold px-2 py-1 rounded bg-zinc-100 border border-zinc-200 text-zinc-600 tracking-wide">
                                       g
@@ -372,7 +385,7 @@ export default function ManufacturingPage() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setRows((p) => [...p, { rawItemId: "", qty: "" }])}
+                        onClick={() => setRows((p) => [...p, { rawItemId: "", qtyInput: "1", gramsInput: "" }])}
                         className="gap-1.5 text-zinc-700 border-zinc-200 hover:bg-zinc-50 text-xs"
                       >
                         <Plus className="h-3.5 w-3.5" /> Add Material Row

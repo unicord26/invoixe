@@ -158,10 +158,7 @@ export default function InvoiceView({ params }: { params: Promise<{ id: string }
       `}</style>
 
       {/* Action Buttons Header */}
-      <div className="no-print mb-6 flex items-center justify-between">
-        <Link href="/invoices" className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-800 transition">
-          ← Back to Invoices
-        </Link>
+      <div className="no-print mb-6 flex items-center justify-end">
         <div className="flex items-center gap-2">
           <Link href={`/invoices/${id}/thermal`} className="rounded-lg border border-zinc-200 px-3.5 py-1.5 text-xs font-bold text-zinc-650 hover:bg-zinc-50 hover:text-zinc-900 transition">
             Thermal Receipt

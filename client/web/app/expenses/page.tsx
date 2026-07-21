@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatINR, rupeesToPaise } from "@invoixe/core";
 import { GST_RATES } from "@invoixe/types";
@@ -25,7 +24,7 @@ export default function ExpensesPage() {
 
   return (
     <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-10">
-      <header className="mb-8"><Link href="/" className="text-sm text-green-700 hover:underline">← Invoixe</Link>
+      <header className="mb-8">
         <h1 className="text-2xl font-extrabold text-gray-900">Expenses</h1></header>
 
       <form onSubmit={(e) => { e.preventDefault(); if (Number(amount) > 0) add.mutate(); }} className="mb-8 grid gap-3 rounded-xl border border-green-200 bg-white p-4 sm:grid-cols-4">

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, MoreHorizontal, Phone, Trash2, Info, Eye, EyeOff, Loader2, Search, Users, CheckCircle, ArrowUpRight, ArrowDownLeft, ArrowLeft, Pencil, BookOpen } from "lucide-react";
+import { Plus, MoreHorizontal, Phone, Trash2, Info, Eye, EyeOff, Loader2, Search, Users, CheckCircle, ArrowUpRight, ArrowDownLeft, Pencil, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { formatINR } from "@invoixe/core";
 import { gstinSchema, phoneSchema, stateNameFromGstin } from "@invoixe/types";
@@ -1375,13 +1375,6 @@ export default function PartiesPage() {
 
   return (
     <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-8">
-      {/* Breadcrumb Header */}
-      <div className="mb-6">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-800 transition">
-          <ArrowLeft className="h-3 w-3" /> Back to Dashboard
-        </Link>
-      </div>
-
       <PageHeader
         title="Parties Workspace"
         description="Manage customers, suppliers, credit configurations, and account balances."

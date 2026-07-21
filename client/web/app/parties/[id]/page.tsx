@@ -1,7 +1,6 @@
 "use client";
 
 import { use, useState } from "react";
-import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatINR, rupeesToPaise } from "@invoixe/core";
 import { api } from "../../../lib/api";
@@ -74,7 +73,6 @@ export default function PartyLedgerPage({ params }: { params: Promise<{ id: stri
   return (
     <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-10">
       <header className="mb-6">
-        <Link href="/parties" className="text-sm text-green-700 hover:underline">← Parties</Link>
         <div className="mt-1 flex items-end justify-between">
           <div>
             <h1 className="text-2xl font-extrabold text-gray-900">{data.party.name}</h1>

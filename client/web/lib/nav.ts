@@ -74,6 +74,7 @@ export function isActiveHref(pathname: string, href: string, currentCategory?: s
     return false;
   }
   if (href === "/") return pathname === "/";
+  if (href === "/bank") return pathname === "/bank";
   return pathname === href || pathname.startsWith(href + "/");
 }
 
@@ -124,8 +125,7 @@ export const NAV: NavSection[] = [
         icon: Landmark,
         items: [
           { label: "Bank Accounts", href: "/bank", desc: "Accounts & transfers" },
-          { label: "Cheques", href: "/bank/cheques", desc: "Track cheques" },
-          { label: "Loan Accounts", href: "/bank/loans", desc: "Loans & EMIs" },
+          { label: "Cheques & Loans", href: "/bank/cheques", desc: "Track cheques & business loans" },
         ],
       },
       {

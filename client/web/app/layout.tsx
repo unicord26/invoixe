@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Invoixe — Powered by UniCord Tech",
+  title: "Invoixe - Powered by UniCord Tech",
   description: "Billing, accounting & inventory platform for Indian SMEs. Powered by UniCord Tech.",
   icons: {
     icon: "/logos.png",

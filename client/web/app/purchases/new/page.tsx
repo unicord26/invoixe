@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { computeInvoice, formatINR, rupeesToPaise } from "@invoixe/core";
 import { GST_RATES, type Item, type Party } from "@invoixe/types";
@@ -55,7 +54,7 @@ export default function NewPurchasePage() {
 
   return (
     <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-10">
-      <header className="mb-6"><Link href="/purchases" className="text-sm text-green-700 hover:underline">← Purchases</Link>
+      <header className="mb-6">
         <h1 className="text-2xl font-extrabold text-gray-900">New Purchase Bill</h1></header>
 
       <div className="mb-6 grid gap-3 rounded-xl border border-green-200 bg-white p-4 sm:grid-cols-2">

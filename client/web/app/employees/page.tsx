@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,7 +11,6 @@ import {
   Phone,
   Trash2,
   Search,
-  ArrowLeft,
   Users,
   UserMinus,
   UserCheck,
@@ -1794,13 +1792,6 @@ export default function EmployeesPage() {
 
   return (
     <main className="mx-auto max-w-[1600px] px-4 sm:px-6 py-6 sm:py-8">
-      {/* Breadcrumb link */}
-      <div className="mb-6">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-800 transition">
-          <ArrowLeft className="h-3 w-3" /> Back to Dashboard
-        </Link>
-      </div>
-
       <PageHeader
         title="Employees &amp; Team Directory"
         description="Manage team members, roles, attendance logs, and monthly disbursements."

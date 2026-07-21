@@ -35,6 +35,9 @@ import {
 
 type ItemWithStock = Item & { currentStock: number };
 
+const isRawMaterial = (i: { categoryName?: string | null; itemCode?: string | null }) =>
+  i.categoryName?.toLowerCase().includes("raw") || i.itemCode?.startsWith("RM-");
+
 // Controlled so it can live OUTSIDE the DropdownMenu — a Dialog nested inside
 // DropdownMenuContent unmounts the moment the menu closes.
 function AdjustStockDialog({
@@ -80,8 +83,8 @@ function AdjustStockDialog({
             autoFocus
           />
           <p className="text-xs text-gray-500">
-            Current stock: <span className="font-medium">{item.currentStock}</span>
-            {valid && <> → new: <span className="font-medium">{item.currentStock + n}</span></>}
+            Current stock: <span className="font-medium">{item.currentStock} {isRawMaterial(item) ? "g" : item.unit}</span>
+            {valid && <> → new: <span className="font-medium">{item.currentStock + n} {isRawMaterial(item) ? "g" : item.unit}</span></>}
           </p>
         </div>
         <DialogFooter>
@@ -250,7 +253,7 @@ function ItemsList() {
             <div className="text-xs capitalize text-gray-400 flex flex-wrap items-center gap-1.5">
               <span>{it.type}</span>
               <span>·</span>
-              <span>{it.unit}</span>
+              <span>{isRawMaterial(it) ? "g" : it.unit}</span>
               {it.itemCode && (
                 <>
                   <span>·</span>

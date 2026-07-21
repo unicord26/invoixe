@@ -10,7 +10,6 @@ import { api } from "../../lib/api";
 import {
   Plus,
   Trash2,
-  ArrowLeft,
   Search,
   ArrowUpRight,
 } from "lucide-react";
@@ -205,12 +204,6 @@ export default function DocumentsPage() {
         {/* Header Bar */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-200/80 pb-6">
           <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Estimates & Orders</h1>
               <p className="text-xs text-zinc-500 mt-0.5">Quotations, proformas, orders, and delivery challans</p>
