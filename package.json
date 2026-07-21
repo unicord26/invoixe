@@ -2,7 +2,8 @@
   "name": "invoixe",
   "version": "0.0.0",
   "private": true,
-  "description": "Invoixe — GST billing, accounting & inventory platform",
+  "description": "Invoixe — GST billing, accounting & inventory platform (Powered by UniCord Tech)",
+  "author": "UniCord Tech",
   "packageManager": "npm@11.6.1",
   "workspaces": [
     "client/*",

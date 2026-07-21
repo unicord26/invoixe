@@ -47,7 +47,7 @@ async function checkSupabaseAuth(): Promise<{ ok: boolean; ms: number; error?: s
  * only needs to confirm the module graph boots without throwing.
  */
 async function reportStartup(app: INestApplication, origins: string[]) {
-  console.log(`\n  ${dim("Invoixe API")}`);
+  console.log(`\n  ${dim("Invoixe API — Powered by UniCord Tech")}`);
   ok("env", loadedEnvPath ? dim(loadedEnvPath) : dim("ambient environment (no .env file found)"));
 
   // In CI there is no real DB or Supabase — skip live probes to keep the log clean.

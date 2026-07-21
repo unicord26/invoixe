@@ -954,12 +954,12 @@ export default function LoginPage() {
             </div>
             <div className="lx-branding-logo-text">
               <h2>Invoixe</h2>
-              <p>GST Billing &amp; Accounting</p>
+              <p>Powered by UniCord Tech</p>
             </div>
           </div>
 
           <div className="lx-branding-content">
-            <span className="lx-branding-tag">Seamless SME Operations</span>
+            <span className="lx-branding-tag">Powered by UniCord Tech</span>
             <h1 className="lx-branding-title">Simplify your invoicing &amp; bookkeeping.</h1>
             <p className="lx-branding-desc">
               Join thousands of businesses who trust Invoixe to manage their GST returns, sales records, purchases, inventory, and clients.
@@ -982,7 +982,7 @@ export default function LoginPage() {
           </div>
 
           <div className="lx-branding-footer">
-            © {new Date().getFullYear()} Invoixe Technologies. All rights reserved.
+            © {new Date().getFullYear()} Invoixe — Powered by UniCord Tech. All rights reserved.
           </div>
         </div>
 
@@ -1002,7 +1002,7 @@ export default function LoginPage() {
               </div>
               <div className="lx-branding-logo-text">
                 <h2 style={{ fontSize: 16, color: "#111827" }}>Invoixe</h2>
-                <p style={{ fontSize: 10 }}>GST Billing &amp; Accounting</p>
+                <p style={{ fontSize: 10, color: "#16a34a", fontWeight: 600 }}>Powered by UniCord Tech</p>
               </div>
             </div>
 

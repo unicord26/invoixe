@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 
 type Bom = { id: string; itemId: string; lines: { rawItemId: string; qty: number }[] };
 
+
 export default function ManufacturingPage() {
   const qc = useQueryClient();
   const { data: items, isLoading: itemsLoading } = useQuery({
@@ -73,10 +74,16 @@ export default function ManufacturingPage() {
     },
   });
 
-  // Filter items
-  const products = items?.filter((i) => i.type === "product") ?? [];
-  const finishedProducts = products.filter((p) => p.categoryName?.toLowerCase() !== "raw material");
-  const rawMaterials = products.filter((p) => p.categoryName?.toLowerCase() === "raw material");
+  // Detect raw material items using the same heuristic as items/page.tsx:
+  // category name contains "raw" OR item code starts with "RM-"
+  const isRawMaterial = (i: typeof items extends (infer T)[] | undefined ? T : never) =>
+    i.categoryName?.toLowerCase().includes("raw") || i.itemCode?.startsWith("RM-");
+
+  // Products list (left panel): everything that is NOT a raw material
+  const finishedProducts = (items ?? []).filter((i) => !isRawMaterial(i));
+
+  // Raw materials source for the BOM dropdown: all items that ARE raw materials
+  const rawMaterials = (items ?? []).filter((i) => isRawMaterial(i));
 
   // Search filter
   const filteredProducts = finishedProducts.filter((p) =>
@@ -84,7 +91,7 @@ export default function ManufacturingPage() {
     (p.itemCode && p.itemCode.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const selectedProduct = products.find((p) => p.id === finishedId);
+  const selectedProduct = items?.find((p) => p.id === finishedId);
 
   // Compute maximum buildable
   let maxBuildable: number | null = null;
@@ -305,11 +312,13 @@ export default function ManufacturingPage() {
                                 <td className="py-2.5 px-4">
                                   <select
                                     value={row.rawItemId}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                       setRows((p) =>
-                                        p.map((x, idx) => (idx === i ? { ...x, rawItemId: e.target.value } : x))
-                                      )
-                                    }
+                                        p.map((x, idx) =>
+                                          idx === i ? { ...x, rawItemId: e.target.value } : x
+                                        )
+                                      );
+                                    }}
                                     className="w-full bg-white border border-zinc-200 rounded-md px-2 py-1.5 outline-none focus:border-zinc-300 text-xs"
                                   >
                                     <option value="">— select raw material —</option>
@@ -326,7 +335,7 @@ export default function ManufacturingPage() {
                                       type="number"
                                       step="any"
                                       min="0"
-                                      placeholder="0"
+                                      placeholder="e.g. 200"
                                       value={row.qty}
                                       onChange={(e) => {
                                         const val = e.target.value;
@@ -335,10 +344,10 @@ export default function ManufacturingPage() {
                                           p.map((x, idx) => (idx === i ? { ...x, qty: val } : x))
                                         );
                                       }}
-                                      className="w-full bg-white border border-zinc-200 rounded-md px-2 py-1.5 outline-none focus:border-zinc-300 text-xs"
+                                      className="w-28 bg-white border border-zinc-200 rounded-md px-2 py-1.5 outline-none focus:border-zinc-300 text-xs"
                                     />
-                                    <span className="text-zinc-500 shrink-0">
-                                      {rawMaterials.find((r) => r.id === row.rawItemId)?.unit || ""}
+                                    <span className="shrink-0 text-[10px] font-bold px-2 py-1 rounded bg-zinc-100 border border-zinc-200 text-zinc-600 tracking-wide">
+                                      g
                                     </span>
                                   </div>
                                 </td>

@@ -459,6 +459,7 @@ export default function InvoiceView({ params }: { params: Promise<{ id: string }
         {/* Row 9: Print Sheet Disclaimer */}
         <div className="flex justify-between items-center text-[9px] text-zinc-450 font-semibold border-t border-zinc-100 pt-4 mt-6">
           <span>This is a computer generated invoice.</span>
+          <span>Invoixe — Powered by UniCord Tech</span>
           <span>Subject to {inv.business.jurisdiction ?? "local"} Jurisdiction</span>
         </div>
       </div>

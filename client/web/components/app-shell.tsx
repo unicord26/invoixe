@@ -199,7 +199,7 @@ function SidebarContent({
           </div>
           <div>
             <h2 className="font-bold text-white text-lg tracking-tight leading-tight">Invoixe</h2>
-            <p className="text-[11px] text-green-400 font-medium">Billing Workspace</p>
+            <p className="text-[10px] text-green-400 font-medium tracking-tight">Powered by UniCord Tech</p>
           </div>
         </Link>
       </div>
@@ -242,6 +242,11 @@ function SidebarContent({
             <LogOut className="w-4 h-4" />
             Sign out
           </button>
+        </div>
+        <div className="mt-3 pt-2.5 border-t border-[#112419] text-center">
+          <p className="text-[10px] text-zinc-500 font-medium tracking-wide">
+            Invoixe • Powered by <span className="text-zinc-400 font-semibold">UniCord Tech</span>
+          </p>
         </div>
       </div>
     </div>
