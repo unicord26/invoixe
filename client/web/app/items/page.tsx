@@ -8,7 +8,6 @@ import { MoreHorizontal, Trash2, SlidersHorizontal, Package } from "lucide-react
 import { toast } from "sonner";
 import { formatINR } from "@invoixe/core";
 import { type Item } from "@invoixe/types";
-import Link from "next/link";
 import { api } from "../../lib/api";
 import { PageHeader } from "../../components/page-header";
 import { DataTable, type Column } from "../../components/data-table";

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { CalendarDays, RefreshCw } from "lucide-react";
 import {
   DashboardKPIs,
@@ -10,7 +9,6 @@ import {
   DashboardAlerts,
   QuickActions
 } from "@/components/dashboard-metrics";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";

@@ -4,21 +4,15 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { computeInvoice, formatINR, rupeesToPaise, inWordsINR } from "@invoixe/core";
+import { computeInvoice, formatINR, rupeesToPaise } from "@invoixe/core";
 import { GST_RATES, type DocumentType, type Item, type Party } from "@invoixe/types";
 import { api } from "../../lib/api";
 import {
-  FileText,
   Plus,
   Trash2,
   ArrowLeft,
   Search,
-  CheckCircle2,
-  Calendar,
-  User,
-  ArrowRightLeft,
   ArrowUpRight,
-  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -106,7 +100,6 @@ export default function DocumentsPage() {
     );
   }, [parties, cfg.supplier]);
 
-  const selectedParty = parties?.find((p) => p.id === partyId);
 
   // Computed Invoice Total
   const invoiceData = useMemo(() => {

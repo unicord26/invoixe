@@ -16,7 +16,6 @@ import {
   Users,
   UserMinus,
   UserCheck,
-  DollarSign,
   Pencil,
   Calendar,
   CreditCard,
@@ -771,6 +770,7 @@ function RecordPaymentDialog({ open, onOpenChange, employees, payments = [], def
         handleSelectEmployee(activeEmployees[0].id);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, defaultEmployeeId]);
 
   const mutation = useMutation({
@@ -1603,8 +1603,7 @@ export default function EmployeesPage() {
         for (const empId of activeIds) {
           const idx = updated.findIndex((a) => a.employeeId === empId && a.date === payload.date);
           if (idx >= 0) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            updated[idx] = { ...updated[idx]!, status } as EmployeeAttendance;
+            updated[idx] = { ...updated[idx], status } as EmployeeAttendance;
           } else {
             updated.push({
               id: `optimistic-bulk-${empId}`,
@@ -2342,7 +2341,6 @@ export default function EmployeesPage() {
                 const absentCount = empLogs.filter((a) => a.status === "absent").length;
 
                 // Automated LOP & Payable Days Algorithm
-                const payableDays = presentCount + (halfDayCount * 0.5) + paidLeaveCount + sundayCount;
                 const unpaidLopDays = Math.max(0, absentCount);
                 const baseSalaryRupees = paiseToRupees(emp.salary || 0);
                 const perDayRateRupees = baseSalaryRupees / Math.max(1, daysInMonth);

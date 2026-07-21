@@ -19,11 +19,8 @@ import {
   CreditCard,
   Trash2,
   ShieldCheck,
-  AlertTriangle,
   Calculator,
   ShieldAlert,
-  DollarSign,
-  CheckCircle2
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -116,8 +113,7 @@ export default function BankPage() {
   // Custom Verification GSAP Toast
   const [toastMessage, setToastMessage] = useState<{ title: string; desc: string } | null>(null);
   
-  // Penny-Drop secure verification state
-  const [verifyStep, setVerifyStep] = useState<"idle" | "connecting" | "penny_drop" | "routing" | "matching" | "success" | "fail">("idle");
+  // Penny-Drop secure verification state is handled via GSAP toast only
 
   // Cash register physical audit states
   const [cashAuditOpen, setCashAuditOpen] = useState(false);
