@@ -1,4 +1,4 @@
-# 🍃 Invoixe — Modern GST Billing & Inventory Suite
+# 🍃 Invoixe - Modern GST Billing & Inventory Suite
 ### *Powered by UniCord Tech*
 
 <div align="center">
@@ -31,6 +31,8 @@
 *   **👷 Employee Management & Optimistic Attendance:** Full employee lifecycle management with 0ms optimistic UI updates — Daily Attendance Logger (Present, Absent, Half Day, Paid Leave), Monthly Matrix Heatmap, LOP & Salary Auditor, and real-time Attendance-to-Payroll Salary Payout modal with amount-in-words conversion.
 *   **🏦 Unified Cheques & Loans Portal:** Consolidated business loans and cheque registers in one dashboard. Track outstanding credit liabilities, repayment percentages, and EMI drawdowns while logging cheque clearance cycles associated directly with active customer/supplier profiles and bank ledgers.
 *   **📋 GST Compliance Center:** Step-by-step GSTR-1 and GSTR-3B filing wizards with live document checklists, automated tax preview calculations, download options, and a clean interface tailored for small business owners (vyaparis).
+*   **🛒 Purchase Bills Ledger:** Full supplier purchase management with KPI stats (total purchases, input GST paid, average bill size), per-line item entry from inventory, automatic CGST/SGST vs IGST detection, stock auto-update on save, and reference no. tracking.
+*   **💸 Operational Expenses Portal:** Quick-entry expense log with category badges (Rent, Salary, Electricity, Transport, Office, Marketing, Maintenance, Misc), payment mode tracking (Cash, UPI, Cheque, Bank Transfer, Card), dynamic GST preview calculations, supplier linkage, and KPI rollup cards.
 *   **🏢 Multi-Tenant Workspaces:** Create and toggle between multiple business profiles securely. Each tenant has isolated database references, dedicated storage buckets, configuration rules, and staff access controls.
 *   **📊 Timeframe Dashboard Analytics:** Interactive home dashboard with range-based filters (1D, 7D, 1M, 1Y, 5Y, All) updating Today's Sales, Gross Profit, and the Sales vs Expense trend graph in real-time from the database.
 *   **🏭 Manufacturing & BOM Recipes:** Log raw material consumption, work-in-progress batches, and finished goods production runs linked via automated Bill of Materials (BOM) recipes.
@@ -85,6 +87,17 @@ Invoixe is organized as a unified monorepo leveraging npm workspaces:
 ---
 
 ## 📐 Recent Changes
+
+### v0.5 — July 2026
+
+| Area | Change |
+|------|--------|
+| **Purchase Bills Page** | Complete ground-up redesign of `/purchases` list with KPI cards (Total Purchases, Input GST Paid, Average Bill Size), search bar, status filter, and DataTable with supplier info and per-line GST breakdown. |
+| **New Purchase Form** | Redesigned `/purchases/new` as a two-column layout — left panel for bill details with live supplier info card (GSTIN, interstate/intrastate auto-detection), right panel for line items with per-line subtotal previews. |
+| **Expenses Portal** | Ground-up redesign of `/expenses` with a two-column layout — left side is a quick-entry form with dynamic GST preview, right side is a searchable and filterable DataTable with colored category badges. Added KPI cards (Total, Digital, Cash). |
+| **Dashboard-matching KPI Cards** | All new page KPI cards precisely match the dashboard's `KPICard` structure, typography, and spacing — 10px uppercase label, 8px icon container, and `text-xl font-extrabold` value. |
+
+---
 
 ### v0.4 — July 2026
 
