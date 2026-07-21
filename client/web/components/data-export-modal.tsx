@@ -7,7 +7,6 @@ import {
   X,
   FileDown,
   Database,
-  AlertCircle,
   Info,
 } from "lucide-react";
 import {

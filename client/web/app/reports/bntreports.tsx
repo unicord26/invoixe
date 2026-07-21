@@ -354,7 +354,7 @@ export function BntReports() {
 
   const totalReceivables = useMemo(() => receivables.reduce((s, r) => s + r.balance, 0), [receivables]);
   const totalPayables = useMemo(() => payables.reduce((s, p) => s + p.balance, 0), [payables]);
-  const stockRows = stockData?.rows ?? [];
+  const stockRows = useMemo(() => stockData?.rows ?? [], [stockData?.rows]);
   const totalStockVal = stockData?.totalValue ?? 0;
   const lowStockRows = useMemo(() => stockRows.filter((r) => r.low), [stockRows]);
 
