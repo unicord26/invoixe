@@ -482,7 +482,7 @@ export default function DocumentsPage() {
                 ) : filteredDocs.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center text-zinc-400">
-                      No {cfg.label.toLowerCase()} found. Click "+ New" above to create one.
+                      No {cfg.label.toLowerCase()} found. Click &quot;+ New&quot; above to create one.
                     </td>
                   </tr>
                 ) : (

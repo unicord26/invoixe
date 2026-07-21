@@ -8,7 +8,6 @@ import { supabase } from "../lib/supabase";
 import { AppShell } from "../components/app-shell";
 import { ConnectionStatus } from "../components/connection-status";
 import { Toaster } from "@/components/ui/sonner";
-import { LoadingScreen } from "../components/loading-screen";
 
 type AuthState = { session: Session | null; signOut: () => Promise<void> };
 const AuthCtx = createContext<AuthState>({ session: null, signOut: async () => {} });

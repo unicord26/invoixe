@@ -1899,7 +1899,7 @@ export default function EmployeesPage() {
       </div>
 
       {/* Main Tabs Navigation */}
-      <Tabs defaultValue="directory" value={mainTab} onValueChange={(val) => setMainTab(val as any)} className="w-full">
+      <Tabs defaultValue="directory" value={mainTab} onValueChange={(val) => setMainTab(val as "directory" | "attendance" | "payments")} className="w-full">
         <TabsList className="h-11 bg-zinc-100/80 p-1 mb-6 rounded-lg gap-2">
           <TabsTrigger value="directory" className="text-xs font-semibold px-4 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-xs">
             <Users className="h-3.5 w-3.5 mr-1.5" /> Staff Directory
@@ -1998,7 +1998,7 @@ export default function EmployeesPage() {
             return (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-gradient-to-br from-emerald-900 to-emerald-950 text-white p-4 rounded-xl shadow-sm border border-emerald-800">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">Today's Attendance Rate</div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">Today&apos;s Attendance Rate</div>
                   <div className="text-2xl font-black mt-1 flex items-baseline justify-between">
                     <span>{ratePercent}%</span>
                     <span className="text-xs font-semibold px-2 py-0.5 bg-emerald-800/80 rounded-full text-emerald-200">

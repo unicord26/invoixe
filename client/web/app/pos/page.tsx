@@ -371,15 +371,17 @@ export default function PosPage() {
               <div className="space-y-1.5 border-t border-zinc-100 pt-4">
                 <label className="text-xs font-semibold text-zinc-700">Payment Method</label>
                 <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { id: "cash", label: "Cash" },
-                    { id: "upi", label: "UPI" },
-                    { id: "card", label: "Card" },
-                    { id: "bank_transfer", label: "Bank" },
-                  ].map((mode) => (
+                  {(
+                    [
+                      { id: "cash", label: "Cash" },
+                      { id: "upi", label: "UPI" },
+                      { id: "card", label: "Card" },
+                      { id: "bank_transfer", label: "Bank" },
+                    ] as const
+                  ).map((mode) => (
                     <button
                       key={mode.id}
-                      onClick={() => setPaymentMode(mode.id as any)}
+                      onClick={() => setPaymentMode(mode.id)}
                       className={`rounded-lg py-2 text-xs font-bold transition border ${
                         paymentMode === mode.id
                           ? "border-emerald-700 bg-emerald-50 text-emerald-900 shadow-2xs"
